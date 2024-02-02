@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "sumula"
+version = "0.1.0"
+description = ""
+authors = ["Rodrigoneal <rodrigho2006@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pytest = "^8.0.0"
+tabula-py = {extras = ["jpype"], version = "^2.9.0"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
