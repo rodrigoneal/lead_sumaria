@@ -84,3 +84,54 @@ def primeira_pagina():
     Confederação Brasileira de Futebol Publicação da Súmula: 07/12/2023 00:52 Emissão desta via: 07/12/2023 00:52 Página 1/3
                                 1 / 3
     """
+
+@pytest.fixture
+def segunda_pagina():
+    return """
+ Comissão Técnica
+Ceará / CE
+Assistente Técnico: Juliano Roberto Antonello
+Assistente Técnico: Alcino Rodrigues Lima
+Médico: Pedro Guilme Teixeira De Sousa Filho
+Treinador De Goleiros: Everaldo Goncalves Santana
+Preparador Físico: Edy Carlos Toporowicz Soares
+Fisioterapeuta: Joao Paulo Cavalcante FrotaJuventude / RS
+Técnico: Celso Juarez Roth
+Assistente Técnico: Humberto Gomes Ferreira
+Médico: Alexandre Schio Fay
+Treinador De Goleiros: Marcio Rodrigo Angonese
+Preparador Físico: Marcos Galgaro
+Massagista: Cleber Willian Fernandes
+Gols
+Tempo 1T/2T NºTipoNome do Jogador Equipe
+23:00 1T89NRCleber Bomfim de Jesus Ceará/CE
++1 1T34CTVitor Mendes Alves Juventude/RS
+06:00 2T77NRGuilherme Parede Pinheiro Juventude/RS
+24:00 2T8NRFernando Pereira do Nascimento Ceará/CE
+43:00 2T11PNErick de Arruda Serafim Ceará/CE
+NR = Normal | PN = Pênalti | CT = Contra | FT = Falta
+Cartões Amarelos
+Tempo 1T/2TNºNome do Jogador Equipe
+24:00 1T26Luis Felipe Rebelo Costa Juventude/RS
+Motivo: A1.13.  Dar uma entrada contra um adversário de maneira temerária na disputa da bola - Ao calçar o adversario
+28:00 2T20Onitlasi Junior de Moraes Rodrigues Juventude/RS
+Motivo: A2.  Desaprovar com palavras ou gestos as decisões da arbitragem  - Por reclamacao contra arbitragem.
+29:00 2T77Guilherme Parede Pinheiro Juventude/RS
+Motivo: A1.13.  Dar uma entrada contra um adversário de maneira temerária na disputa da bola - Ao entrar de carrinho no adversario
+42:00 2T25Lucas Pereira Ramires Constante Juventude/RS
+Motivo: A1.24.  Outro motivo (somente neste caso, abriria um campo livre para o árbitro digitar o que quiser) - Por tocar a mao na bola
+intencionalmente dentro da area penal, impedindo um chute a sua meta.
+11:00 2T89Cleber Bomfim de Jesus Ceará/CE
+Motivo: A1.13.  Dar uma entrada contra um adversário de maneira temerária na disputa da bola - Ao calçar o adversario.
+26:00 1T7Richardson Fernandes dos Santos Ceará/CE
+Motivo: A1.3.  Cometer uma falta tática para impedir um ataque promissor - Ao calçar o adversario.
+27:00 1T44Marcos Victor Ferreira da Silva Ceará/CE
+Motivo: A1.13.  Dar uma entrada contra um adversário de maneira temerária na disputa da bola - Ao calçar o adversario
+37:00 2T11Erick de Arruda Serafim Ceará/CE
+Motivo: A1.13.  Dar uma entrada contra um adversário de maneira temerária na disputa da bola - Dar uma entrada de carrinho no
+adversario.
+Cartões Vermelhos
+NÃO HOUVE EXPULSÕES
+Confederação Brasileira de Futebol Publicação da Súmula: 13/11/2022 19:18 Emissão desta via: 13/11/2022 19:18 Página 2/3
+                               2 / 3
+    """

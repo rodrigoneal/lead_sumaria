@@ -3,26 +3,26 @@ import tabula
 
 
 def extrair_dados_partida(texto: str):
-    re.compile(r"ON-LINE([\s\S]*?)Arbitragem")
     texto = re.search(r"ON-LINE([\s\S]*?)Arbitragem", texto).group(1)
     return texto
 
 
 def limpar_dados_partida(texto: str):
-    breakpoint()
-    regex = re.compile(
-        r"Data: (\d{2}/\d{2}/\d{4}) Horário: (\d{2}:\d{2}) Estádio: (.+)"
+    campeonato = re.search(r"Campeonato:([\s\S]*?)Rodada:", texto).group(1).strip()
+    rodada = re.search(r"Rodada:([\s\S]*?)Jogo:", texto).group(1).strip()
+    jogo = re.search(r"Jogo:([\s\S]*?)Data:", texto).group(1).strip()
+    data = re.search(r"Data:([\s\S]*?)Horário:", texto).group(1).strip()
+    horario = re.search(r"Horário:([\s\S]*?)Estádio:", texto).group(1).strip()
+    estadio = re.search(r"Estádio:([\s\S]*)", texto).group(1).strip()
+    return ({
+        "campeonato": campeonato,
+        "rodada": rodada,
+        "jogo": jogo,
+        "data": data,
+        "horario": horario,
+        "estadio": estadio}
     )
-    return regex.search(texto).group(1, 2, 3)
 
-
-def extrair_dados_partida_e_limpar(texto: str):
-    dados_partida = limpar_dados_partida(extrair_dados_partida(texto))
-    return {
-        "data": dados_partida[0],
-        "horario": dados_partida[1],
-        "estadio": dados_partida[2],
-    }
 
 
 def extrair_dados_arbitragem(texto: str):
@@ -100,13 +100,42 @@ def limpar_comissao_tecnica(comissao: list[str], nome_mandante: str, nome_visita
     equipe_atual = mandante
 
     for item in comissao:
-        if nome_visitante in item:
-            item = item.replace(nome_visitante, "")
-            equipe_atual.append(item)
+        try:
+            cargo, nome = item.split(":")
+        except IndexError:
+            continue
+        if nome_visitante in nome:
+            nome = nome.replace(nome_visitante, "")
+            equipe_atual.append({"Cargo": cargo.strip(), "Nome": nome.strip()})
             equipe_atual = visitante
             continue
-        equipe_atual.append(item)
+        equipe_atual.append({"Cargo": cargo.strip(), "Nome": nome.strip()})
     return {
         nome_mandante: mandante,
         nome_visitante: visitante
     }
+
+def extrair_dados_gols(text: str):
+    regex = re.compile(r'Gols([\s\S]*?)NR = Normal')
+    correspondencia = regex.search(text)
+    return correspondencia.group(1).splitlines()[2:]
+
+def limpar_dados_gols(dados_gols: list[str]):
+    gols = []
+    for dado in dados_gols:
+        hora_gol = re.search(r"(\+(\d+)|\d+:\d+)", dado).group()
+        tempo_jogo = re.search(r"(\d+[Tt])", dado).group()
+        numero_jogador = re.search(r"T(\d+)", dado).group(1)
+        tipo_de_gol = re.search(r"(NR|PN|CT|FT)", dado).group(1)
+        _nome = re.search(r"(NR|PN|CT|FT)(.*)", dado).group(2)
+        nome_jogador = _nome.rsplit(" ", 1)[0]
+        time_jogador = _nome.rsplit(" ", 1)[1]
+        gols.append({
+            "hora_gol": hora_gol,
+            "tempo_jogo": tempo_jogo,
+            "numero_jogador": numero_jogador,
+            "tipo_gol": tipo_de_gol,
+            "nome_jogador": nome_jogador,
+            "time": time_jogador
+        })
+    return gols
