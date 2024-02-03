@@ -9,6 +9,8 @@ readme = "README.md"
 python = "^3.12"
 pytest = "^8.0.0"
 tabula-py = {extras = ["jpype"], version = "^2.9.0"}
+requests = "^2.31.0"
+pypdf2 = "^3.0.1"
 
 
 [build-system]

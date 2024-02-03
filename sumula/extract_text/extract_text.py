@@ -25,6 +25,7 @@ def limpar_dados_partida(texto: str):
 
 
 
+
 def extrair_dados_arbitragem(texto: str):
     texto = re.search(r"Arbitragem([\s\S]*?)Cronologia", texto).group(1)
     return texto
@@ -42,6 +43,9 @@ def limpar_dados_arbitragem(texto: str):
                 pass
     return arbitros
 
+def dados_arbitragem(texto: str) -> list[dict[str, str]]:
+    dados = extrair_dados_arbitragem(texto)
+    return limpar_dados_arbitragem(dados)
 
 def extrair_dados_cronologia(texto: str):
     regex = re.compile(r"Cronologia([\s\S]*?)Relação")
@@ -69,19 +73,21 @@ def limpar_dados_cronologia(texto: str):
 def extrair_relacao_jogadores(pdf):
     tables = tabula.read_pdf_with_template(pdf, "template_jogadores.json")
     df = tables[-1]
+    try:
+        if df.iloc[-1,0].startswith("T = "):
+            df = df.iloc[:-1, :]
+    except AttributeError:
+        pass
     colunas = df.iloc[1, 0:6]
-    nome_time_casa = df.iloc[0, 0]
-    nome_time_visitante = df.iloc[0, 2]
-    escalacao_casa = df.iloc[2:-1, 0:6]
+    nome_time_casa, nome_time_visitante = df.iloc[0, :].dropna()
+    escalacao_casa = df.iloc[2:, 0:6].dropna(how="all")
     escalacao_casa.columns = colunas
-    escalacao_casa.dropna(inplace=True, how="all")
     mandante = {
         "time": nome_time_casa,
         "escalacao": escalacao_casa.to_dict(orient="records"),
     }
-    escalacao_visitante = df.iloc[2:-1, 6:]
+    escalacao_visitante = df.iloc[2:, 6:].dropna(how="all")
     escalacao_visitante.columns = colunas
-    escalacao_visitante.dropna(inplace=True, how="all")
     visitante = {
         "time": nome_time_visitante,
         "escalacao": escalacao_visitante.to_dict(orient="records"),
