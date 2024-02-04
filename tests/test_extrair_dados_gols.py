@@ -15,4 +15,4 @@ def test_se_limpa_dados_gols():
         "43:00 2T11PNErick de Arruda Serafim Ceará/CE",
     ]
     dados_gols = limpar_dados_gols(gols)
-    breakpoint()
+    assert len(dados_gols) == len(gols)

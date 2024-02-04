@@ -145,3 +145,33 @@ def limpar_dados_gols(dados_gols: list[str]):
             "time": time_jogador
         })
     return gols
+
+def extrair_dados_cartao_amarelos(text: str):
+    regex = re.compile(r'Cartões Amarelos([\s\S]*?)Cartões Vermelhos')
+    correspondencia = regex.search(text)
+    return correspondencia.group(1)
+
+def limpar_dados_cartao_amarelos(dados_cartao: str):
+    padroes = re.split(r'\n(?=\d{2}:\d{2}|\+\d{2}:\d{2})', dados_cartao)
+    amarelos = []
+    sub = re.compile(r'(\d+:\d+)\s*([12]T)\s*(\d+[A-Z]\d+)?(\d+\w+ [\w\s\/]+) Motivo: ([\w\.\s\-]+)')
+    for padrao in padroes:    
+        correspondencia = sub.search(padrao.replace("\n", " "))
+        if correspondencia:
+            horario = correspondencia.group(1)
+            tempo = correspondencia.group(2) if correspondencia.group(2) else ""
+            numero = correspondencia.group(3)
+            _nome = correspondencia.group(4)
+            motivo = correspondencia.group(5)
+            numero = re.sub(r'[a-zA-Z]', '', _nome).split(" ")[0].strip()
+            nome= re.sub(r'\d+', '', _nome).rsplit(" ", 1)[0].strip()
+            equipe = _nome.rsplit(" ", 1)[1].strip()
+            amarelos.append({
+                "horario": horario,
+                "tempo": tempo,
+                "numero": numero,
+                "nome": nome,
+                "equipe": equipe,
+                "motivo": motivo
+            })
+    return amarelos
