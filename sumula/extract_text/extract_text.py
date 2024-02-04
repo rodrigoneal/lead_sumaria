@@ -14,16 +14,14 @@ def limpar_dados_partida(texto: str):
     data = re.search(r"Data:([\s\S]*?)Horário:", texto).group(1).strip()
     horario = re.search(r"Horário:([\s\S]*?)Estádio:", texto).group(1).strip()
     estadio = re.search(r"Estádio:([\s\S]*)", texto).group(1).strip()
-    return ({
+    return {
         "campeonato": campeonato,
         "rodada": rodada,
         "jogo": jogo,
         "data": data,
         "horario": horario,
-        "estadio": estadio}
-    )
-
-
+        "estadio": estadio,
+    }
 
 
 def extrair_dados_arbitragem(texto: str):
@@ -43,9 +41,11 @@ def limpar_dados_arbitragem(texto: str):
                 pass
     return arbitros
 
+
 def dados_arbitragem(texto: str) -> list[dict[str, str]]:
     dados = extrair_dados_arbitragem(texto)
     return limpar_dados_arbitragem(dados)
+
 
 def extrair_dados_cronologia(texto: str):
     regex = re.compile(r"Cronologia([\s\S]*?)Relação")
@@ -74,7 +74,7 @@ def extrair_relacao_jogadores(pdf):
     tables = tabula.read_pdf_with_template(pdf, "template_jogadores.json")
     df = tables[-1]
     try:
-        if df.iloc[-1,0].startswith("T = "):
+        if df.iloc[-1, 0].startswith("T = "):
             df = df.iloc[:-1, :]
     except AttributeError:
         pass
@@ -96,11 +96,14 @@ def extrair_relacao_jogadores(pdf):
 
 
 def extrair_comissao_tecnica(text: str):
-    regex = re.compile(r'Técnica([\s\S]*?)Gols')
+    regex = re.compile(r"Técnica([\s\S]*?)Gols")
     correspondencia = regex.search(text)
     return correspondencia.group(1).splitlines()[2:]
 
-def limpar_comissao_tecnica(comissao: list[str], nome_mandante: str, nome_visitante: str):
+
+def limpar_comissao_tecnica(
+    comissao: list[str], nome_mandante: str, nome_visitante: str
+):
     mandante = []
     visitante = []
     equipe_atual = mandante
@@ -116,15 +119,14 @@ def limpar_comissao_tecnica(comissao: list[str], nome_mandante: str, nome_visita
             equipe_atual = visitante
             continue
         equipe_atual.append({"Cargo": cargo.strip(), "Nome": nome.strip()})
-    return {
-        nome_mandante: mandante,
-        nome_visitante: visitante
-    }
+    return {nome_mandante: mandante, nome_visitante: visitante}
+
 
 def extrair_dados_gols(text: str):
-    regex = re.compile(r'Gols([\s\S]*?)NR = Normal')
+    regex = re.compile(r"Gols([\s\S]*?)NR = Normal")
     correspondencia = regex.search(text)
     return correspondencia.group(1).splitlines()[2:]
+
 
 def limpar_dados_gols(dados_gols: list[str]):
     gols = []
@@ -136,26 +138,32 @@ def limpar_dados_gols(dados_gols: list[str]):
         _nome = re.search(r"(NR|PN|CT|FT)(.*)", dado).group(2)
         nome_jogador = _nome.rsplit(" ", 1)[0]
         time_jogador = _nome.rsplit(" ", 1)[1]
-        gols.append({
-            "hora_gol": hora_gol,
-            "tempo_jogo": tempo_jogo,
-            "numero_jogador": numero_jogador,
-            "tipo_gol": tipo_de_gol,
-            "nome_jogador": nome_jogador,
-            "time": time_jogador
-        })
+        gols.append(
+            {
+                "hora_gol": hora_gol,
+                "tempo_jogo": tempo_jogo,
+                "numero_jogador": numero_jogador,
+                "tipo_gol": tipo_de_gol,
+                "nome_jogador": nome_jogador,
+                "time": time_jogador,
+            }
+        )
     return gols
 
+
 def extrair_dados_cartao_amarelos(text: str):
-    regex = re.compile(r'Cartões Amarelos([\s\S]*?)Cartões Vermelhos')
+    regex = re.compile(r"Cartões Amarelos([\s\S]*?)Cartões Vermelhos")
     correspondencia = regex.search(text)
     return correspondencia.group(1)
 
+
 def limpar_dados_cartao_amarelos(dados_cartao: str):
-    padroes = re.split(r'\n(?=\d{2}:\d{2}|\+\d{2}:\d{2})', dados_cartao)
+    padroes = re.split(r"\n(?=\d{2}:\d{2}|\+\d{2}:\d{2})", dados_cartao)
     amarelos = []
-    sub = re.compile(r'(\d+:\d+)\s*([12]T)\s*(\d+[A-Z]\d+)?(\d+\w+ [\w\s\/]+) Motivo: ([\w\.\s\-]+)')
-    for padrao in padroes:    
+    sub = re.compile(
+        r"(\d+:\d+)\s*([12]T)\s*(\d+[A-Z]\d+)?(\d+\w+ [\w\s\/]+) Motivo: ([\w\.\s\-]+)"
+    )
+    for padrao in padroes:
         correspondencia = sub.search(padrao.replace("\n", " "))
         if correspondencia:
             horario = correspondencia.group(1)
@@ -163,15 +171,17 @@ def limpar_dados_cartao_amarelos(dados_cartao: str):
             numero = correspondencia.group(3)
             _nome = correspondencia.group(4)
             motivo = correspondencia.group(5)
-            numero = re.sub(r'[a-zA-Z]', '', _nome).split(" ")[0].strip()
-            nome= re.sub(r'\d+', '', _nome).rsplit(" ", 1)[0].strip()
+            numero = re.sub(r"[a-zA-Z]", "", _nome).split(" ")[0].strip()
+            nome = re.sub(r"\d+", "", _nome).rsplit(" ", 1)[0].strip()
             equipe = _nome.rsplit(" ", 1)[1].strip()
-            amarelos.append({
-                "horario": horario,
-                "tempo": tempo,
-                "numero": numero,
-                "nome": nome,
-                "equipe": equipe,
-                "motivo": motivo
-            })
+            amarelos.append(
+                {
+                    "horario": horario,
+                    "tempo": tempo,
+                    "numero": numero,
+                    "nome": nome,
+                    "equipe": equipe,
+                    "motivo": motivo,
+                }
+            )
     return amarelos
