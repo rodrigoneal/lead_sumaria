@@ -2,6 +2,7 @@ import PyPDF2
 import httpx
 
 from sumula.extract_text.extract_text import (
+    dados_comissao_tecnica,
     dados_cronologogia,
     dados_partida,
     dados_arbitragem,
@@ -9,11 +10,15 @@ from sumula.extract_text.extract_text import (
 )
 
 from sumula.entities.entities import (
+    Escalacao,
     Jogo,
     Arbitragem,
     Cronologia1T,
     Cronologia2T,
     RelacaoJogadores,
+    Equipe,
+    PrimeiraPagina,
+    Cronologia,
 )
 
 
@@ -21,18 +26,22 @@ class PDFHandler:
     def __init__(self, pdf):
         self.pdf = pdf
         self.read_pdf = self._read_pdf(pdf)
+        self.mandante, self.visitante = self.dados_jogo(self.pegar_pagina(0))
 
+    def dados_jogo(self, texto):
+        dados = dados_partida(texto)
+        mandante = dados["mandante"]
+        visitante = dados["visitante"]
+        return mandante, visitante
     def _read_pdf(self, pdf):
         return PyPDF2.PdfReader(pdf)
 
     def pegar_pagina(self, pagina: int):
         return self.read_pdf.pages[pagina].extract_text()
 
-    def extrair_times(self, partida: str):
-        self.mandante, self.visitante = partida.split(" X ")
 
-    def primeira_pagina(self, pagina: int):
-        text = self.pegar_pagina(pagina)
+    def primeira_pagina(self):
+        text = self.pegar_pagina(0)
         partida = dados_partida(text)
         arbitragem = dados_arbitragem(text)
         cronologia = dados_cronologogia(text)
@@ -41,6 +50,7 @@ class PDFHandler:
         )
         jogadores = extrair_relacao_jogadores(self.pdf, template)
         _jogo = Jogo(**partida)
+        breakpoint()
         _arbitragem = [Arbitragem(**arbitro) for arbitro in arbitragem]
         cronologia_primeiro = Cronologia1T(
             entrada_mandante=cronologia[0]["Entrada do mandante"],
@@ -64,9 +74,34 @@ class PDFHandler:
             acrescimo=cronologia[7]["Acréscimo"],
             resultado=cronologia[-1]["Resultado Final"],
         )
-        jogadores = [RelacaoJogadores(**jogador) for jogador in jogadores]
-        return _jogo, _arbitragem, cronologia_primeiro, jogadores
-
+        times = []
+        for jogador in jogadores:
+            _temp = []
+            for escalacao in jogador["escalacao"]:
+                relacao = RelacaoJogadores(
+                    numero=escalacao["No"],
+                    apelido=escalacao["Apelido"],
+                    nome=escalacao["Nome Completo"],
+                    t_r=escalacao["T/R"],
+                    p_a=escalacao["P/A"],
+                    cbf=escalacao["CBF"],
+                )
+                _temp.append(relacao)
+            times.append(Equipe(time=jogador["time"], escalao=_temp))
+        escalacao = Escalacao(mandante=times[0], visitante=times[1])   
+        cronologia = Cronologia(primeiro_tempo=cronologia_primeiro, segundo_tempo=cronologia_segundo)
+        return PrimeiraPagina(
+            jogo=_jogo,
+            arbitragem=_arbitragem,
+            cronologia=cronologia,
+            escalacao=escalacao,
+        )
+    def segunda_pagina(self):
+        text = self.pegar_pagina(1)
+        if not self.mandante or not self.visitante:
+            self.extrair_times(text)
+        comissao = dados_comissao_tecnica(text, self.mandante, self.visitante)
+        breakpoint()
 
 class PDFDownloader:
     def __init__(self):

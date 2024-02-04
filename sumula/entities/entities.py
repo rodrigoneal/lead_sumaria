@@ -45,11 +45,26 @@ class RelacaoJogadores(BaseModel):
     p_a: str
     cbf: str
 
-class PrimeiraPagina:
+class Equipe(BaseModel):
+    time: str
+    escalao: list[RelacaoJogadores]
+
+
+class Escalacao(BaseModel):
+    mandante: Equipe
+    visitante: Equipe
+
+class Cronologia(BaseModel):
+    primeiro_tempo: Cronologia1T
+    segundo_tempo: Cronologia2T
+
+class PrimeiraPagina(BaseModel):
     jogo: Jogo
     arbitragem: list[Arbitragem]
-    cronologia: list[Cronologia1T]
-    jogadores: list[RelacaoJogadores]
+    cronologia: Cronologia
+    escalacao: Escalacao
+
+
 class Sumula(BaseModel):
     campeonato: str
     rodada: str

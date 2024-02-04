@@ -105,6 +105,7 @@ def extrair_relacao_jogadores(pdf, template):
     }
     return [mandante, visitante]
 
+# Segunda Pagina
 
 def extrair_comissao_tecnica(text: str):
     regex = re.compile(r"Técnica([\s\S]*?)Gols")
@@ -132,6 +133,9 @@ def limpar_comissao_tecnica(
         equipe_atual.append({"Cargo": cargo.strip(), "Nome": nome.strip()})
     return {nome_mandante: mandante, nome_visitante: visitante}
 
+def dados_comissao_tecnica(texto: str,  nome_mandante: str, nome_visitante: str):
+    dados = extrair_comissao_tecnica(texto)
+    return limpar_comissao_tecnica(dados, nome_mandante, nome_visitante)
 
 def extrair_dados_gols(text: str):
     regex = re.compile(r"Gols([\s\S]*?)NR = Normal")
