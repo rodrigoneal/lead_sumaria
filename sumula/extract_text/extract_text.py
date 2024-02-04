@@ -2,6 +2,7 @@ import re
 import tabula
 
 
+
 def extrair_dados_partida(texto: str):
     texto = re.search(r"ON-LINE([\s\S]*?)Arbitragem", texto).group(1)
     return texto
@@ -14,6 +15,7 @@ def limpar_dados_partida(texto: str):
     data = re.search(r"Data:([\s\S]*?)Horário:", texto).group(1).strip()
     horario = re.search(r"Horário:([\s\S]*?)Estádio:", texto).group(1).strip()
     estadio = re.search(r"Estádio:([\s\S]*)", texto).group(1).strip()
+    mandante, visitante = jogo.split(" X ")
     return {
         "campeonato": campeonato,
         "rodada": rodada,
@@ -21,7 +23,13 @@ def limpar_dados_partida(texto: str):
         "data": data,
         "horario": horario,
         "estadio": estadio,
+        "mandante": mandante,
+        "visitante": visitante
     }
+
+def dados_partida(texto: str) -> dict[str, str]:
+    dados = extrair_dados_partida(texto)
+    return limpar_dados_partida(dados)
 
 
 def extrair_dados_arbitragem(texto: str):
@@ -36,15 +44,15 @@ def limpar_dados_arbitragem(texto: str):
         if dado:
             try:
                 cargo, nome = dado.split(":")
-                arbitros.append({"Cargo": cargo.strip(), "Nome": nome.strip()})
+                arbitros.append({"funcao": cargo.strip(), "nome": nome.strip()})
             except ValueError:
                 pass
     return arbitros
 
-
 def dados_arbitragem(texto: str) -> list[dict[str, str]]:
     dados = extrair_dados_arbitragem(texto)
     return limpar_dados_arbitragem(dados)
+
 
 
 def extrair_dados_cronologia(texto: str):
@@ -61,17 +69,20 @@ def limpar_dados_cronologia(texto: str):
             coluna_direita = dados[0].split(":", 1)
             coluna_esquerda = dados[1].split(":", 1)
             temp = {
-                coluna_direita[0].strip(): coluna_direita[1].strip(),
-                coluna_esquerda[0].strip(): coluna_esquerda[1].strip(),
+                coluna_direita[0].strip(): coluna_direita[1].strip().replace("2º Tempo", ""),
+                coluna_esquerda[0].strip(): coluna_esquerda[1].strip().replace("2º Tempo", ""),
             }
             cronologia.append(temp)
         except IndexError:
             pass
     return cronologia
 
+def dados_cronologogia(texto: str) -> list[dict[str, str]]:
+    dados = extrair_dados_cronologia(texto)
+    return limpar_dados_cronologia(dados)
 
-def extrair_relacao_jogadores(pdf):
-    tables = tabula.read_pdf_with_template(pdf, "template_jogadores.json")
+def extrair_relacao_jogadores(pdf, template):
+    tables = tabula.read_pdf_with_template(pdf, template)
     df = tables[-1]
     try:
         if df.iloc[-1, 0].startswith("T = "):
