@@ -1,10 +1,12 @@
 import re
 import tabula
 
+from sumula.extract_text.clear_text import remover_texto
 
 
 def dados_jogo_numero(texto: str):
     return re.search(r"Jogo:([\s\S]*?)CBF - ", texto).group(1).strip()
+
 
 def extrair_dados_partida(texto: str):
     return re.search(r"ON-LINE([\s\S]*?)Arbitragem", texto).group(1)
@@ -108,13 +110,13 @@ def extrair_relacao_jogadores(pdf, template):
     escalacao_casa.columns = colunas
     mandante = {
         "time": nome_time_casa,
-        "escalacao": escalacao_casa.to_dict(orient="records"),
+        "escalacao": escalacao_casa.fillna("").to_dict(orient="records"),
     }
     escalacao_visitante = df.iloc[2:, 6:].dropna(how="all")
     escalacao_visitante.columns = colunas
     visitante = {
         "time": nome_time_visitante,
-        "escalacao": escalacao_visitante.to_dict(orient="records"),
+        "escalacao": escalacao_visitante.fillna("").to_dict(orient="records"),
     }
     return [mandante, visitante]
 
@@ -196,42 +198,55 @@ def extrair_dados_cartao_amarelos(text: str):
     if correspondencia:
         return correspondencia.group(1)
     breakpoint()
-    return ""
 
 
-def limpar_dados_cartao_amarelos(dados_cartao: str):
-    padroes = re.split(r"\n(?=\d{2}:\d{2}|\+\d{2}:\d{2})", dados_cartao)
+def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: str):
+    padroes = re.split(r"(?<=\n|\s)(?=\d{2}:\d{2}|\+\d{2}:\d{2})", dados_cartao)
     amarelos = []
-    sub = re.compile(
-        r"(\d+:\d+)\s*([12]T)\s*(\d+[A-Z]\d+)?(\d+\w+ [\w\s\/]+) Motivo: ([\w\.\s\-]+)"
-    )
+
+    # sub = re.compile(
+    #     r"(\+?\d+:\d+)\s*([12]T)\s*(\d+[A-Z]\d+)?(\d+\w+ [\w\s\/]+) Motivo: ([\w\.\s\-]+)"
+    # )
+    def numero_or_tecnico(text: str):
+        numero = re.search(r"\d+", text)
+        if numero:
+            return numero.group()
+        return text
+    _mandante = mandante.rsplit("/")[0].strip()
+    _visitante = visitante.rsplit("/")[0].strip()
+    padroes = padroes[1:]
     for padrao in padroes:
-        correspondencia = sub.search(padrao.replace("\n", " "))
-        if correspondencia:
-            horario = correspondencia.group(1)
-            tempo = correspondencia.group(2) if correspondencia.group(2) else ""
-            numero = correspondencia.group(3)
-            _nome = correspondencia.group(4)
-            motivo = correspondencia.group(5)
-            numero = re.sub(r"[a-zA-Z]", "", _nome).split(" ")[0].strip()
-            nome = re.sub(r"\d+", "", _nome).rsplit(" ", 1)[0].strip()
-            equipe = _nome.rsplit(" ", 1)[1].strip()
-            amarelos.append(
-                {
-                    "hora_cartao": horario,
-                    "tempo_jogo": tempo,
-                    "numero_jogador": numero,
-                    "nome_jogador": nome,
-                    "time": equipe,
-                    "motivo": motivo,
-                }
-            )
+        dados, *motivo = padrao.splitlines()
+        horario, dados = dados.split(" ", 1)
+        tempo = dados[:2]
+        if _mandante in dados:
+            equipe = mandante
+        elif _visitante in dados:
+            equipe = visitante
+        else: 
+            breakpoint()
+        _equipe = equipe.replace(" / ", "/")
+        dados = dados.replace(_equipe, "").strip()
+        dados = dados.replace(tempo, "").strip()
+        numero = numero_or_tecnico(dados[0:2])
+        nome = dados.replace(numero, "").strip()
+        motivo = " ".join(motivo)
+        amarelos.append(
+            {
+                "hora_cartao": horario,
+                "tempo_jogo": tempo,
+                "numero_jogador": numero,
+                "nome_jogador": nome,
+                "time": equipe,
+                "motivo": remover_texto(motivo),
+            }
+        )
     return amarelos
 
 
-def dados_cartao_amarelo(texto: str):
+def dados_cartao_amarelo(texto: str, mandante: str, visitante:str):
     dados = extrair_dados_cartao_amarelos(texto)
-    return limpar_dados_cartao_amarelos(dados)
+    return limpar_dados_cartao_amarelos(dados, mandante, visitante)
 
 
 def extrair_dados_cartao_vermelhos(text: str):
@@ -239,29 +254,59 @@ def extrair_dados_cartao_vermelhos(text: str):
     correspondencia = regex.search(text)
     if correspondencia:
         return correspondencia.group(1).replace("\nTempo 1T/2TNºNome do Jogador\n", "")
-    return
+    breakpoint()
 
 
 def limpar_dados_cartao_vermelho(text: str):
-    if "\nNÃO HOUVE EXPULSÕES\n" in text:
-        return []
-    textos = text.split(".\n")
+    try:
+        if "\nNÃO HOUVE EXPULSÕES\n" in text:
+            return []
+    except TypeError:
+        breakpoint()
+    padrao = r"\d+:\d+|\+\d+:\d+|-PJ"
+    padrao_horario = r"(\d+:\d+|\+\d+:\d+|-PJ)"
+    textos = re.split(padrao, text)
+    if not textos[0] or  "NºNome do Jogador" in textos[0]:
+        textos[1:]
+    horarios = re.findall(padrao_horario, text)
     dados_cartoes = []
+    cont = 0
     for texto in textos:
         try:
             cartao = re.search(r"\n(.*?)(?:Motivo:|$)", texto).group(1)
         except AttributeError:
             continue
-        hora = re.search(r"(\d{1,3}:\d{2})\s([12][Tt])", texto).group(1)
-        tempo = re.search(r"(\d{1,3}:\d{2})\s([12][Tt])", texto).group(2)
-        numero_jogador = re.search(r"T(\d{1,3})[^-]+-([^-]+)", texto).group(1)
-        nome_jogador = (
-            re.search(r"T(\d{1,3})[^-]+-([^-]+)", texto)
-            .group(0)
-            .split("-")[0]
-            .replace(f"T{numero_jogador}", "")
-            .strip()
-        )
+        try:
+            hora = horarios[cont] if not horarios[cont].startswith("-") else "-"
+        except IndexError:
+            breakpoint()
+        try:
+            tempo = re.search(r"\s([12][Tt])", texto).group(1)
+        except AttributeError:
+            if hora == "-":
+                tempo = horarios[cont][1:]
+            else:
+                tempo = texto.strip()[:3]
+        try:
+            numero_jogador = re.search(r"T(\d{1,3})[^-]+-([^-]+)", texto).group(1)
+        except AttributeError:
+            numero_jogador = texto.strip().replace(tempo, "")[:2]
+        try:
+            nome_jogador = (
+                re.search(r"T(\d{1,3})[^-]+-([^-]+)", texto)
+                .group(0)
+                .split("-")[0]
+                .replace(f"T{numero_jogador}", "")
+                .strip()
+            )
+        except AttributeError:
+            nome_jogador = (
+                texto.strip()
+                .replace(tempo + numero_jogador, "")
+                .strip()
+                .split("-")[0]
+                .strip()
+            )
         motivo = texto.split("Motivo:")[-1].replace("\n", " ").strip()
         time = texto.split("\n", 1)[0].split("-")[-1].strip()
 
@@ -273,9 +318,10 @@ def limpar_dados_cartao_vermelho(text: str):
                 "numero_jogador": numero_jogador,
                 "nome_jogador": nome_jogador,
                 "time": time,
-                "motivo": motivo,
+                "motivo": remover_texto(motivo),
             }
         )
+        cont += 1
     return dados_cartoes
 
 
@@ -317,8 +363,14 @@ def dados_acrescimos(texto: str):
 
 
 def extrair_dados_observacoes_eventuais(texto: str):
-    regex = re.compile(r"Observações Eventuais([\s\S]*?)Relatório do Assistente")
-    return regex.search(texto).group(1)
+    try:
+        return re.search(
+            r"Observações Eventuais([\s\S]*?)Relatório do Assistente", texto
+        ).group(1)
+    except AttributeError:
+        return re.search(r"Observações Eventuais([\s\S]*?)Substituições", texto).group(
+            1
+        )
 
 
 def limpar_dados_observacoes_eventuais(texto: str):
@@ -332,7 +384,10 @@ def dados_observacoes_eventuais(texto: str):
 
 def extrair_dados_relatorio_assistente(texto: str):
     regex = re.compile(r"Relatório do Assistente([\s\S]*?)Substituições")
-    return regex.search(texto).group(1)
+    try:
+        return regex.search(texto).group(1)
+    except AttributeError:
+        return "Nada a relatar."
 
 
 def limpar_dados_relatorio_assistente(texto: str):
@@ -343,10 +398,21 @@ def dados_relatorio_assistente(texto: str):
     dados = extrair_dados_relatorio_assistente(texto)
     return limpar_dados_relatorio_assistente(dados)
 
-def dados_substituicao(pdf: str):
-    tables = tabula.read_pdf(pdf, pages=3, stream=True)
-    df = tables[-1]
+
+def dados_substituicao(pdf: str, num_page):
+    tables = tabula.read_pdf(pdf, pages=num_page, stream=True)
+    try:
+        df = tables[-1]
+    except IndexError:
+        breakpoint()
     df = df.iloc[1:-1, :]
-    df.columns = ["hora_substituicao", "tempo", "time", "entrou", "saiu"]
-    df["tempo"] = df["tempo"].str.replace("INT", "1T")
+    try:
+        df.columns = ["hora_substituicao", "tempo", "time", "entrou", "saiu"]
+    except ValueError:
+        df = df.dropna(axis=1, how="all")
+        df.columns = ["hora_substituicao", "tempo", "time", "entrou", "saiu"]
     return df.to_dict("records")
+
+
+# 05:00 2T2Marcos Luis Rocha Aquino Palmeiras/SP\nMotivo: A1.1.  Dar ou tentar dar um pontapé (chute) em um adversário de maneira temerária na disputa da bola  - Por calçar seu\nadversário de maneira temerária na disputa de bola.
+# +08:00 2T 99 Iury Lirio Freitas de Castilho Ceará/CE\nMotivo: A1.14.  Atuar de maneira a mostrar desrespeito ao jogo - Por atuar de maneira a mostrar desrespeito ao jogo, empurrando um\ndos gandulas.\nTC - TécnicoTC - Técnico\n

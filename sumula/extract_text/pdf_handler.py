@@ -1,4 +1,5 @@
-from tempfile import NamedTemporaryFile, TemporaryFile
+from os import PathLike
+from tempfile import NamedTemporaryFile
 import PyPDF2
 import httpx
 
@@ -47,7 +48,7 @@ from sumula.entities.entities import (
 
 
 class PDFHandler:
-    def __init__(self, pdf):
+    def __init__(self, pdf: PathLike):
         self.pdf = pdf
         self.read_pdf = self._read_pdf(pdf)
         self.mandante, self.visitante = self.dados_jogo(self.pegar_pagina(0))
@@ -64,8 +65,7 @@ class PDFHandler:
     def pegar_pagina(self, pagina: int):
         return self.read_pdf.pages[pagina].extract_text()
 
-    def primeira_pagina(self):
-        text = self.pegar_pagina(0)
+    def primeira_pagina(self, text: str):
         partida = dados_partida(text)
         jogo_num = dados_jogo_numero(text)
         arbitragem = dados_arbitragem(text)
@@ -102,14 +102,17 @@ class PDFHandler:
         for jogador in jogadores:
             _temp = []
             for escalacao in jogador["escalacao"]:
-                relacao = RelacaoJogadores(
-                    numero=escalacao["No"],
-                    apelido=escalacao["Apelido"],
-                    nome=escalacao["Nome Completo"],
-                    t_r=escalacao["T/R"],
-                    p_a=escalacao["P/A"],
-                    cbf=escalacao["CBF"],
-                )
+                try:
+                    relacao = RelacaoJogadores(
+                        numero=escalacao["No"],
+                        apelido=escalacao["Apelido"],
+                        nome=escalacao["Nome Completo"],
+                        t_r=escalacao["T/R"],
+                        p_a=escalacao["P/A"],
+                        cbf=escalacao["CBF"],
+                    )
+                except:
+                    breakpoint()
                 _temp.append(relacao)
             times.append(Equipe(time=jogador["time"], escalao=_temp))
         escalacao = Escalacao(mandante=times[0], visitante=times[1])
@@ -123,8 +126,7 @@ class PDFHandler:
             escalacao=escalacao,
         )
 
-    def segunda_pagina(self):
-        text = self.pegar_pagina(1)
+    def segunda_pagina(self, text: str):
         if not self.mandante or not self.visitante:
             self.extrair_times(text)
         comissoes = dados_comissao_tecnica(text, self.mandante, self.visitante)
@@ -137,7 +139,7 @@ class PDFHandler:
         comissao = Comissao(mandante=equipes_comissao[0], visitante=equipes_comissao[1])
         _gols = dados_gols(text)
         gols = [Gols(**gol) for gol in _gols]
-        cartoes = dados_cartao_amarelo(text)
+        cartoes = dados_cartao_amarelo(text, self.mandante, self.visitante)
         cartao_amarelo = [CartoesAmarelo(**cartao) for cartao in cartoes]
         vermelhos = dados_cartao_vermelho(text)
         cartao_vermelho = [CartaoVermelho(**cartao) for cartao in vermelhos]
@@ -148,13 +150,12 @@ class PDFHandler:
             cartoes_vermelho=cartao_vermelho,
         )
 
-    def terceira_pagina(self):
-        text = self.pegar_pagina(2)
+    def terceira_pagina(self, text: str, num_page: int):
         _ocorrencias = dados_ocorrencias(text)
         _acrescimos = dados_acrescimos(text)
         _observacoes = dados_observacoes_eventuais(text)
         _assistente = dados_relatorio_assistente(text)
-        _substituicao = dados_substituicao(self.pdf)
+        _substituicao = dados_substituicao(self.pdf, num_page=num_page)
         ocorrencias = Ocorrencias(mensagem=_ocorrencias)
         acrescimos = Acrescimo(mensagem=_acrescimos)
         observacao = Observacoes(mensagem=_observacoes)
@@ -169,14 +170,42 @@ class PDFHandler:
             substituicao=substituicao,
         )
 
+    def get_yellow_cards(self):
+        extrair = False
+        paginas = []
+        num_pages = len(self.read_pdf.pages)
+        for page in range(num_pages):
+            if "\nCartões Amarelos" in self.read_pdf.pages[page].extract_text():
+                extrair = True
+            if extrair:
+                text = (
+                    self.read_pdf.pages[page]
+                    .extract_text()
+                    .replace(f"{page+1} / {num_pages}", "")
+                    .strip()
+                )
+                paginas.append(text)
+            if "Ocorrências / Observações" in self.read_pdf.pages[page].extract_text():
+                break
+        return " ".join(paginas)
+
     def sumula(self):
-        # if len(self.read_pdf.pages) > 3:
-        #     raise Exception("PDF com mais de 3 paginas")
+        text_page_one = self.read_pdf.pages[0].extract_text()
+        text_page_three = self.read_pdf.pages[-1].extract_text()
+        if len(self.read_pdf.pages) > 3:
+            text_page_two = self.get_yellow_cards()
+            with open("erros", "+a") as file:
+                file.write(self.pdf + "\n")
+        else:
+            text_page_two = self.read_pdf.pages[1].extract_text()
         return Sumula(
-            primeira_pagina=self.primeira_pagina(),
-            segunda_pagina=self.segunda_pagina(),
-            terceira_pagina=self.terceira_pagina(),
+            primeira_pagina=self.primeira_pagina(text_page_one),
+            segunda_pagina=self.segunda_pagina(text_page_two),
+            terceira_pagina=self.terceira_pagina(
+                text_page_three, num_page=len(self.read_pdf.pages)
+            ),
         )
+
 
 class PDFDownloader:
     def __init__(self):
@@ -186,6 +215,7 @@ class PDFDownloader:
         with httpx.Client() as client:
             response = client.get(self.url.format(ano=ano, jogo=jogo))
             with NamedTemporaryFile(delete=False, suffix=".pdf") as file:
+                print(f"Salvando >>>> {file.name}")
                 file.write(response.content)
                 return file.name
 
@@ -200,11 +230,7 @@ class Crawler:
         jogos = range(1, 375 + 1)
         for ano in anos:
             for jogo in jogos:
-                try:
-                    print(f"Ano: {ano} - Jogo: {jogo}")
-                    pdf = self.PDF_downloader.requisicao(ano, jogo)
+                print(f"Ano: {ano} - Jogo: {jogo}")
+                pdf = self.PDF_downloader.requisicao(ano, jogo)
 
-                    yield PDFHandler(pdf).sumula()
-                except Exception as e:
-                    breakpoint()
-
+                yield PDFHandler(pdf).sumula()

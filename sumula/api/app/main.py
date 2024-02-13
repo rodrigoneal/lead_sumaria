@@ -17,6 +17,10 @@ app = FastAPI()
 #     return response
 
 @app.get("/")
+async def all():
+    response = SumulaRepository().get_all()
+    return response
+@app.get("/")
 async def jogo(year: int, game_num: int):
     response = SumulaRepository().get_by_year_game_num(year, game_num)
     return response
