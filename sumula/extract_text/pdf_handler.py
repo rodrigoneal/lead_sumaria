@@ -138,7 +138,7 @@ class PDFHandler:
                 _temp.append(ComissaoTecnica(**i))
             equipes_comissao.append(EquipeComissao(time=k, comissao=_temp))
         comissao = Comissao(mandante=equipes_comissao[0], visitante=equipes_comissao[1])
-        _gols = dados_gols(text)
+        _gols = dados_gols(text, self.mandante, self.visitante)
         gols = [Gols(**gol) for gol in _gols]
         cartoes = dados_cartao_amarelo(text, self.mandante, self.visitante)
         cartao_amarelo = [CartoesAmarelo(**cartao) for cartao in cartoes]
@@ -218,7 +218,6 @@ class PDFDownloader:
 
     def requisicao(self, ano: str, jogo: str):
         with httpx.Client() as client:
-            breakpoint()
             response = client.get(self.url.format(ano=ano, jogo=jogo))
             with NamedTemporaryFile(delete=False, suffix=".pdf") as file:
                 print(f"Salvando >>>> {file.name}")

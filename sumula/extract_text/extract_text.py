@@ -164,32 +164,37 @@ def extrair_dados_gols(text: str):
     return []
 
 
-def limpar_dados_gols(dados_gols: list[str]):
+def limpar_dados_gols(dados_gols: list[str], mandante: str, visitante: str):
     gols = []
+    _mandante = mandante.replace(" / ", "/")
+    _visitante = visitante.replace(" / ", "/")
     for dado in dados_gols:
         hora_gol = re.search(r"(\+(\d+)|\d+:\d+)", dado).group()
         tempo_jogo = re.search(r"(\d+[Tt])", dado).group()
         numero_jogador = re.search(r"T(\d+)", dado).group(1)
         tipo_de_gol = re.search(r"(NR|PN|CT|FT)", dado).group(1)
-        _nome = re.search(r"(NR|PN|CT|FT)(.*)", dado).group(2)
-        nome_jogador = _nome.rsplit(" ", 1)[0]
-        time_jogador = _nome.rsplit(" ", 1)[1]
+        dados = re.search(r"(NR|PN|CT|FT)(.*)", dado).group(2)
+        if _mandante in dados:
+            time_jogador = _mandante
+        elif _visitante in dados:
+            time_jogador = _visitante
+        nome_jogador = dados.replace(time_jogador, "")
         gols.append(
             {
-                "hora_gol": hora_gol,
-                "tempo_jogo": tempo_jogo,
-                "numero_jogador": numero_jogador,
-                "tipo_gol": tipo_de_gol,
-                "nome_jogador": nome_jogador,
-                "time": time_jogador,
+                "hora_gol": hora_gol.strip(),
+                "tempo_jogo": tempo_jogo.strip(),
+                "numero_jogador": numero_jogador.strip(),
+                "tipo_gol": tipo_de_gol.strip(),
+                "nome_jogador": nome_jogador.strip(),
+                "time": time_jogador.strip(),
             }
         )
     return gols
 
 
-def dados_gols(texto: str):
+def dados_gols(texto: str, mandante: str, visitante: str):
     dados = extrair_dados_gols(texto)
-    return limpar_dados_gols(dados)
+    return limpar_dados_gols(dados, mandante, visitante)
 
 
 def extrair_dados_cartao_amarelos(text: str):
@@ -268,24 +273,23 @@ def limpar_dados_cartao_vermelho(text: str):
     padrao_horario = r"(\d+:\d+|\+\d+:\d+|-PJ)"
     textos = re.split(padrao, text)
     if not textos[0] or "NºNome do Jogador" in textos[0]:
-        textos[1:]
+        textos = textos[1:]
     horarios = re.findall(padrao_horario, text)
     dados_cartoes = []
-    cont = 0
-    for texto in textos:
+    for contador, texto in enumerate(textos):
         try:
             cartao = re.search(r"\n(.*?)(?:Motivo:|$)", texto).group(1)
         except AttributeError:
             continue
         try:
-            hora = horarios[cont] if not horarios[cont].startswith("-") else "-"
+            hora = horarios[contador] if not horarios[contador].startswith("-") else "-"
         except IndexError:
             breakpoint()
         try:
             tempo = re.search(r"\s([12][Tt])", texto).group(1)
         except AttributeError:
             if hora == "-":
-                tempo = horarios[cont][1:]
+                tempo = horarios[contador][1:]
             else:
                 tempo = texto.strip()[:3]
         try:
@@ -322,7 +326,6 @@ def limpar_dados_cartao_vermelho(text: str):
                 "motivo": remover_texto(motivo),
             }
         )
-        cont += 1
     return dados_cartoes
 
 
@@ -430,20 +433,27 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
     substituicoes = []
     if "Tempo 1T/2T" in textos[0]:
         textos = textos[1:]
-    _mandante = mandante.split("/")[0].strip()
-    _visitante = visitante.split("/")[0].strip()
+    _mandante = mandante.replace(" / ", "/").strip()
+    _visitante = visitante.replace(" / ", "/").strip()
     for contador, texto in enumerate(textos):
         texto = texto.strip()
         if _mandante in texto:
-            equipe = mandante
+            equipe = _mandante
         elif _visitante in texto:
-            equipe = visitante
+            equipe = _visitante
         else:
             breakpoint()
         hora = horarios[contador]
-        tempo, dados = texto.split(equipe.replace(" / ", "/"))
+        try:
+            tempo, dados = texto.split(equipe)
+        except ValueError:
+            breakpoint()
         num_entrou, dados, nome_saiu = dados.split("-")
-        num_saiu = re.search(padrao_numero, dados).group()
+        num_result = re.search(padrao_numero, dados)
+        if num_result:
+            num_saiu = num_result.group()
+        else:
+            num_saiu = "-"
         nome_entrou = dados.replace(num_saiu, "").strip()
         substituicoes.append(
             {
@@ -457,3 +467,4 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
             }
         )
     return substituicoes
+

@@ -33,3 +33,7 @@ class SumulaRepository:
           (  Query().primeira_pagina.jogo.ano == year)
             & (Query().primeira_pagina.jogo.jogo_num == game_num)
         )
+    
+    def get_by_team(self, team, year):
+        team = team.capitalize()
+        return self.db.search((Query().primeira_pagina.jogo.jogo.search(team) & (Query().primeira_pagina.jogo.ano == year)))
