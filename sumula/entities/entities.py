@@ -131,6 +131,8 @@ class Substituicoes(BaseModel):
     hora_substituicao: str
     time: str
     tempo: str
+    num_entrou: str
+    num_saiu: str
     entrou: str
     saiu: str
 

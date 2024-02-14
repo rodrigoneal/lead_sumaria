@@ -212,6 +212,7 @@ def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: st
         if numero:
             return numero.group()
         return text
+
     _mandante = mandante.rsplit("/")[0].strip()
     _visitante = visitante.rsplit("/")[0].strip()
     padroes = padroes[1:]
@@ -223,7 +224,7 @@ def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: st
             equipe = mandante
         elif _visitante in dados:
             equipe = visitante
-        else: 
+        else:
             breakpoint()
         _equipe = equipe.replace(" / ", "/")
         dados = dados.replace(_equipe, "").strip()
@@ -244,7 +245,7 @@ def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: st
     return amarelos
 
 
-def dados_cartao_amarelo(texto: str, mandante: str, visitante:str):
+def dados_cartao_amarelo(texto: str, mandante: str, visitante: str):
     dados = extrair_dados_cartao_amarelos(texto)
     return limpar_dados_cartao_amarelos(dados, mandante, visitante)
 
@@ -266,7 +267,7 @@ def limpar_dados_cartao_vermelho(text: str):
     padrao = r"\d+:\d+|\+\d+:\d+|-PJ"
     padrao_horario = r"(\d+:\d+|\+\d+:\d+|-PJ)"
     textos = re.split(padrao, text)
-    if not textos[0] or  "NºNome do Jogador" in textos[0]:
+    if not textos[0] or "NºNome do Jogador" in textos[0]:
         textos[1:]
     horarios = re.findall(padrao_horario, text)
     dados_cartoes = []
@@ -331,6 +332,7 @@ def dados_cartao_vermelho(texto: str):
 
 
 def extrair_dados_ocorrencias(texto: str):
+
     regex = re.compile(
         r"Ocorrências / Observações([\s\S]*?)Motivo de atraso no início e/ou"
     )
@@ -414,5 +416,44 @@ def dados_substituicao(pdf: str, num_page):
     return df.to_dict("records")
 
 
-# 05:00 2T2Marcos Luis Rocha Aquino Palmeiras/SP\nMotivo: A1.1.  Dar ou tentar dar um pontapé (chute) em um adversário de maneira temerária na disputa da bola  - Por calçar seu\nadversário de maneira temerária na disputa de bola.
-# +08:00 2T 99 Iury Lirio Freitas de Castilho Ceará/CE\nMotivo: A1.14.  Atuar de maneira a mostrar desrespeito ao jogo - Por atuar de maneira a mostrar desrespeito ao jogo, empurrando um\ndos gandulas.\nTC - TécnicoTC - Técnico\n
+def dados_substituicao_2(text: str, mandante: str, visitante: str):
+    regex = re.compile(r"Substituições([\s\S]*?)Confederação Brasileira de Futebol")
+    try:
+        texto = regex.search(text).group(1)
+    except AttributeError:
+        return "Nada a relatar."
+    padrao = r"\d+:\d+|\+\d+:\d+|-PJ"
+    padrao_horario = r"(\d+:\d+|\+\d+:\d+|-PJ)"
+    padrao_numero = r"\d+"
+    horarios = re.findall(padrao_horario, texto)
+    textos = re.split(padrao, texto)
+    substituicoes = []
+    if "Tempo 1T/2T" in textos[0]:
+        textos = textos[1:]
+    _mandante = mandante.split("/")[0].strip()
+    _visitante = visitante.split("/")[0].strip()
+    for contador, texto in enumerate(textos):
+        texto = texto.strip()
+        if _mandante in texto:
+            equipe = mandante
+        elif _visitante in texto:
+            equipe = visitante
+        else:
+            breakpoint()
+        hora = horarios[contador]
+        tempo, dados = texto.split(equipe.replace(" / ", "/"))
+        num_entrou, dados, nome_saiu = dados.split("-")
+        num_saiu = re.search(padrao_numero, dados).group()
+        nome_entrou = dados.replace(num_saiu, "").strip()
+        substituicoes.append(
+            {
+                "hora_substituicao": hora.strip(),
+                "tempo": tempo.strip(),
+                "time": equipe.strip(),
+                "num_entrou": num_entrou.strip(),
+                "entrou": nome_entrou.strip(),
+                "num_saiu": num_saiu.strip(),
+                "saiu": nome_saiu.strip(),
+            }
+        )
+    return substituicoes

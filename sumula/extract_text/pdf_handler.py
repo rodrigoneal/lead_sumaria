@@ -16,6 +16,7 @@ from sumula.extract_text.extract_text import (
     dados_arbitragem,
     dados_relatorio_assistente,
     dados_substituicao,
+    dados_substituicao_2,
     extrair_relacao_jogadores,
     dados_gols,
 )
@@ -155,7 +156,9 @@ class PDFHandler:
         _acrescimos = dados_acrescimos(text)
         _observacoes = dados_observacoes_eventuais(text)
         _assistente = dados_relatorio_assistente(text)
-        _substituicao = dados_substituicao(self.pdf, num_page=num_page)
+        # _substituicao = dados_substituicao(self.pdf, num_page=num_page)
+        # if not _substituicao:
+        _substituicao = dados_substituicao_2(text, self.mandante, self.visitante)
         ocorrencias = Ocorrencias(mensagem=_ocorrencias)
         acrescimos = Acrescimo(mensagem=_acrescimos)
         observacao = Observacoes(mensagem=_observacoes)
@@ -170,12 +173,12 @@ class PDFHandler:
             substituicao=substituicao,
         )
 
-    def get_yellow_cards(self):
+    def get_pages(self, inicio: str, fim: str = None) -> str:
         extrair = False
         paginas = []
         num_pages = len(self.read_pdf.pages)
         for page in range(num_pages):
-            if "\nCartões Amarelos" in self.read_pdf.pages[page].extract_text():
+            if inicio in self.read_pdf.pages[page].extract_text():
                 extrair = True
             if extrair:
                 text = (
@@ -185,19 +188,21 @@ class PDFHandler:
                     .strip()
                 )
                 paginas.append(text)
-            if "Ocorrências / Observações" in self.read_pdf.pages[page].extract_text():
+            if fim and fim in self.read_pdf.pages[page].extract_text():
                 break
         return " ".join(paginas)
 
     def sumula(self):
         text_page_one = self.read_pdf.pages[0].extract_text()
+        text_page_two = self.read_pdf.pages[1].extract_text()
         text_page_three = self.read_pdf.pages[-1].extract_text()
         if len(self.read_pdf.pages) > 3:
-            text_page_two = self.get_yellow_cards()
-            with open("erros", "+a") as file:
-                file.write(self.pdf + "\n")
-        else:
-            text_page_two = self.read_pdf.pages[1].extract_text()
+            text_page_two = self.get_pages(
+                "\nCartões Amarelos", "Ocorrências / Observações"
+            )
+            text_page_three = self.get_pages(
+                "Ocorrências", None
+            )
         return Sumula(
             primeira_pagina=self.primeira_pagina(text_page_one),
             segunda_pagina=self.segunda_pagina(text_page_two),
@@ -213,6 +218,7 @@ class PDFDownloader:
 
     def requisicao(self, ano: str, jogo: str):
         with httpx.Client() as client:
+            breakpoint()
             response = client.get(self.url.format(ano=ano, jogo=jogo))
             with NamedTemporaryFile(delete=False, suffix=".pdf") as file:
                 print(f"Salvando >>>> {file.name}")
