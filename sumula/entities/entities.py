@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class Jogo(BaseModel):
     campeonato: str
-    rodada: int
+    rodada: int | str
     jogo: str
     data: str
     horario: str
@@ -39,6 +39,9 @@ class Cronologia2T(BaseModel):
     acrescimo: str
     resultado: str
 
+class CronologiaPenalti(BaseModel):
+    resultado: str | None = None
+
 class RelacaoJogadores(BaseModel):
     numero: int
     apelido: str
@@ -59,6 +62,7 @@ class Escalacao(BaseModel):
 class Cronologia(BaseModel):
     primeiro_tempo: Cronologia1T
     segundo_tempo: Cronologia2T
+    penalti: CronologiaPenalti
 
 class PrimeiraPagina(BaseModel):
     jogo: Jogo

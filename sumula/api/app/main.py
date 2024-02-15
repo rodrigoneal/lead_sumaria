@@ -31,6 +31,7 @@ app = FastAPI()
 
 
 @app.get("/")
-async def search(time: str, ano: int):
-    response = SumulaRepository().get_by_team(time, ano)
+async def search(time: str, ano: int, rodada: int =0 , jogo:int = 0):
+    response = SumulaRepository().get_by_team(time, ano, rodada, jogo)
     return response
+

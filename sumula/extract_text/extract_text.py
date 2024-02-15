@@ -72,6 +72,22 @@ def limpar_dados_cronologia(texto: str):
     listas_textos = texto.splitlines()[2:]
     for lista_texto in listas_textos:
         dados = lista_texto.strip().split("     ")
+        if len(dados) == 1:
+            if "Atraso" in dados[0]:
+                key_name = "Atraso"
+                dados = dados[0].split("Atraso")
+            elif "Acréscimo" in dados[0]:
+                key_name = "Acréscimo"
+                dados = dados[0].split("Acréscimo")
+            elif "Resultado" in dados[0]:
+                key_name = "Resultado"
+                dados = dados[0].rsplit("Resultado", 1)
+            else:
+                breakpoint()
+
+            _temp = f"{key_name} {dados[-1].strip()}"
+            dados[-1] = _temp
+
         try:
             coluna_direita = dados[0].split(":", 1)
             coluna_esquerda = dados[1].split(":", 1)
@@ -88,8 +104,13 @@ def limpar_dados_cronologia(texto: str):
             cronologia.append(temp)
         except IndexError:
             pass
+    if "Penalti" in dados[-1]:
+        penalti = dados[-1].split(":")
+        cronologia.append({penalti[0].strip(): penalti[1].strip()})
     return cronologia
 
+
+# [{'Entrada do mandante': '18:50', 'Atraso': 'Não Houve'}, {'Entrada do visitante': '18:50', 'Atraso': 'Não Houve'}, {'Início 1º Tempo': '19:00', 'Atraso': 'Não Houve'}, {'Término do 1º Tempo': '19:48', 'Acréscimo': '3 min'}, {'Entrada do mandante': '20:01', 'Atraso': 'Não Houve'}, {'Entrada do visitante': '20:01', 'Atraso': 'Não Houve'}, {'Início do 2º Tempo': '20:03', 'Atraso': 'Não Houve'}, {'Término do 2º Tempo': '20:56', 'Acréscimo': '8 min'}, {'Resultado do 1º Tempo': '1 X 2', 'Resultado Final': '3 X 2'}]
 
 def dados_cronologogia(texto: str) -> list[dict[str, str]]:
     dados = extrair_dados_cronologia(texto)
@@ -105,7 +126,10 @@ def extrair_relacao_jogadores(pdf, template):
     except AttributeError:
         pass
     colunas = df.iloc[1, 0:6]
-    nome_time_casa, nome_time_visitante = df.iloc[0, :].dropna()
+    try:
+        nome_time_casa, nome_time_visitante = df.iloc[0, :].dropna()
+    except ValueError:
+        breakpoint()
     escalacao_casa = df.iloc[2:, 0:6].dropna(how="all")
     escalacao_casa.columns = colunas
     mandante = {
@@ -442,12 +466,18 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
         elif _visitante in texto:
             equipe = _visitante
         else:
-            breakpoint()
+            if _mandante.rsplit(" ", 1)[0] in texto:
+                equipe = _mandante
+            elif _visitante.rsplit(" ", 1)[0] in texto:
+                equipe = _visitante
+            else:
+                breakpoint()
         hora = horarios[contador]
         try:
             tempo, dados = texto.split(equipe)
         except ValueError:
-            breakpoint()
+            tempo, dados = texto.split(equipe.rsplit(" ",1)[0])
+            dados = dados.replace("...", "").strip()
         num_entrou, dados, nome_saiu = dados.split("-")
         num_result = re.search(padrao_numero, dados)
         if num_result:

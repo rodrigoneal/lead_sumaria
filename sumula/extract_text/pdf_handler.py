@@ -15,7 +15,6 @@ from sumula.extract_text.extract_text import (
     dados_partida,
     dados_arbitragem,
     dados_relatorio_assistente,
-    dados_substituicao,
     dados_substituicao_2,
     extrair_relacao_jogadores,
     dados_gols,
@@ -28,6 +27,7 @@ from sumula.entities.entities import (
     CartoesAmarelo,
     Comissao,
     ComissaoTecnica,
+    CronologiaPenalti,
     EquipeComissao,
     Escalacao,
     Gols,
@@ -71,12 +71,22 @@ class PDFHandler:
         jogo_num = dados_jogo_numero(text)
         arbitragem = dados_arbitragem(text)
         cronologia = dados_cronologogia(text)
-        template = (
-            "template_jogadores.json" if len(arbitragem) < 12 else "maior_template.json"
-        )
+        if len(arbitragem) <= 5:
+            template = "template_sem_var.json"
+        elif len(arbitragem) >= 12:
+            template = "maior_template.json"
+        else:
+            template = "template_jogadores.json"
         jogadores = extrair_relacao_jogadores(self.pdf, template)
         _jogo = Jogo(**partida, jogo_num=jogo_num)
         _arbitragem = [Arbitragem(**arbitro) for arbitro in arbitragem]
+        try:
+            resultado = cronologia[-1]["Resultado do 1º Tempo"]
+        except KeyError:
+            try:
+                resultado = cronologia[-2]["Resultado do 1º Tempo"]
+            except KeyError:
+                breakpoint()
         cronologia_primeiro = Cronologia1T(
             entrada_mandante=cronologia[0]["Entrada do mandante"],
             atraso_mandante=cronologia[0]["Atraso"],
@@ -86,8 +96,13 @@ class PDFHandler:
             atraso_inicio=cronologia[2]["Atraso"],
             termino=cronologia[3]["Término do 1º Tempo"],
             acrescimo=cronologia[3]["Acréscimo"],
-            resultado=cronologia[-1]["Resultado do 1º Tempo"],
+            resultado=resultado,
         )
+        try:
+            resultado = cronologia[-1]["Resultado Final"]
+        except KeyError:
+            resultado = cronologia[-2]["Resultado Final"]
+
         cronologia_segundo = Cronologia2T(
             entrada_mandante=cronologia[4]["Entrada do mandante"],
             atraso_mandante=cronologia[4]["Atraso"],
@@ -97,8 +112,13 @@ class PDFHandler:
             atraso_inicio=cronologia[6]["Atraso"],
             termino=cronologia[7]["Término do 2º Tempo"],
             acrescimo=cronologia[7]["Acréscimo"],
-            resultado=cronologia[-1]["Resultado Final"],
+            resultado=resultado,
         )
+        try:
+            resultado = cronologia[-1]["Resultado Penalti"]
+            cronologia_penalti = CronologiaPenalti(resultado=resultado)
+        except KeyError:
+            cronologia_penalti = CronologiaPenalti()
         times = []
         for jogador in jogadores:
             _temp = []
@@ -118,8 +138,11 @@ class PDFHandler:
             times.append(Equipe(time=jogador["time"], escalao=_temp))
         escalacao = Escalacao(mandante=times[0], visitante=times[1])
         cronologia = Cronologia(
-            primeiro_tempo=cronologia_primeiro, segundo_tempo=cronologia_segundo
+            primeiro_tempo=cronologia_primeiro,
+            segundo_tempo=cronologia_segundo,
+            penalti=cronologia_penalti,
         )
+
         return PrimeiraPagina(
             jogo=_jogo,
             arbitragem=_arbitragem,
@@ -200,9 +223,7 @@ class PDFHandler:
             text_page_two = self.get_pages(
                 "\nCartões Amarelos", "Ocorrências / Observações"
             )
-            text_page_three = self.get_pages(
-                "Ocorrências", None
-            )
+            text_page_three = self.get_pages("Ocorrências", None)
         return Sumula(
             primeira_pagina=self.primeira_pagina(text_page_one),
             segunda_pagina=self.segunda_pagina(text_page_two),
@@ -214,11 +235,12 @@ class PDFHandler:
 
 class PDFDownloader:
     def __init__(self):
-        self.url = "https://conteudo.cbf.com.br/sumulas/{ano}/142{jogo}se.pdf"
+        # self.url = "https://conteudo.cbf.com.br/sumulas/{ano}/142{jogo}se.pdf"
+        self.url = "https://conteudo.cbf.com.br/sumulas/{ano}/424{jogo}se.pdf"
 
-    def requisicao(self, ano: str, jogo: str):
-        with httpx.Client() as client:
-            response = client.get(self.url.format(ano=ano, jogo=jogo))
+    async def requisicao(self, ano: str, jogo: str):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(self.url.format(ano=ano, jogo=jogo))
             with NamedTemporaryFile(delete=False, suffix=".pdf") as file:
                 print(f"Salvando >>>> {file.name}")
                 file.write(response.content)
@@ -230,12 +252,7 @@ class Crawler:
         self.PDF_downloader = PDFDownloader()
         self.erros = []
 
-    def pegar_todos_jogos(self):
-        anos = ["2022", "2023"]
-        jogos = range(1, 375 + 1)
-        for ano in anos:
-            for jogo in jogos:
-                print(f"Ano: {ano} - Jogo: {jogo}")
-                pdf = self.PDF_downloader.requisicao(ano, jogo)
-
-                yield PDFHandler(pdf).sumula()
+    async def pegar_todos_jogos(self, ano, jogo):
+        print(f"Ano: {ano} - Jogo: {jogo}")
+        pdf = await self.PDF_downloader.requisicao(ano, jogo)
+        return PDFHandler(pdf).sumula()
