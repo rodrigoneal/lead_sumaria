@@ -12,7 +12,7 @@ crawler = Crawler()
 
 competicao = "copa"
 
-num_jogos = 381 if competicao == "campeaonato" else 122
+num_jogos = 381 if competicao == "campeaonato" else 123
 
 
 async def pegar_dados(ano, jogo):
@@ -28,7 +28,8 @@ async def pegar_todos_jogos():
         for jogo in jogos:
             tasks.append(asyncio.create_task(pegar_dados(ano, jogo)))
             if len(tasks) >= 10:
-                await asyncio.gather(*tasks)
+                for task in asyncio.as_completed(tasks):
+                    await task
                 tasks = []
 
 
