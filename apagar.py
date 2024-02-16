@@ -1,12 +1,7 @@
 import asyncio
-from sumula.extract_text.pdf_handler import Crawler, PDFHandler
+from sumula.api.domain.repositories.sumula import SumulaRepository
+from sumula.extract_text.pdf_handler import Crawler
 from aiotinydb import AIOTinyDB
-
-
-
-# pdf_handler = PDFHandler("defeito_6.pdf")
-# pdf_handler.sumula()
-
 
 crawler = Crawler()
 
@@ -14,11 +9,11 @@ competicao = "copa"
 
 num_jogos = 381 if competicao == "campeaonato" else 123
 
-
 async def pegar_dados(ano, jogo):
     result = await crawler.pegar_todos_jogos(ano, jogo)
     async with AIOTinyDB('db.json') as db:
-        db.insert(result.model_dump())
+        sumula_repository = SumulaRepository(db)
+        sumula_repository.insert(result)
 
 async def pegar_todos_jogos():
     anos = ["2022", "2023"]
