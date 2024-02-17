@@ -1,3 +1,4 @@
+from beanie import Document
 from pydantic import BaseModel
 
 
@@ -13,34 +14,39 @@ class Jogo(BaseModel):
     ano: int
     jogo_num: int
 
+
 class Arbitragem(BaseModel):
     funcao: str
     nome: str
+
 
 class Cronologia1T(BaseModel):
     entrada_mandante: str
     atraso_mandante: str
     entrada_visitante: str
     atraso_visitante: str
-    inicio:str
+    inicio: str
     atraso_inicio: str
     termino: str
     acrescimo: str
     resultado: str
+
 
 class Cronologia2T(BaseModel):
     entrada_mandante: str
     atraso_mandante: str
     entrada_visitante: str
     atraso_visitante: str
-    inicio:str
+    inicio: str
     atraso_inicio: str
     termino: str
     acrescimo: str
     resultado: str
 
+
 class CronologiaPenalti(BaseModel):
     resultado: str | None = None
+
 
 class RelacaoJogadores(BaseModel):
     numero: int
@@ -49,6 +55,7 @@ class RelacaoJogadores(BaseModel):
     t_r: str
     p_a: str
     cbf: str
+
 
 class Equipe(BaseModel):
     time: str
@@ -59,10 +66,12 @@ class Escalacao(BaseModel):
     mandante: Equipe
     visitante: Equipe
 
+
 class Cronologia(BaseModel):
     primeiro_tempo: Cronologia1T
     segundo_tempo: Cronologia2T
     penalti: CronologiaPenalti
+
 
 class PrimeiraPagina(BaseModel):
     jogo: Jogo
@@ -70,15 +79,19 @@ class PrimeiraPagina(BaseModel):
     cronologia: Cronologia
     escalacao: Escalacao
 
+
 # Segunda Pagina
-    
+
+
 class ComissaoTecnica(BaseModel):
     cargo: str
     nome: str
 
+
 class EquipeComissao(BaseModel):
     time: str
     comissao: list[ComissaoTecnica]
+
 
 class Comissao(BaseModel):
     mandante: EquipeComissao
@@ -102,6 +115,7 @@ class CartoesAmarelo(BaseModel):
     nome_jogador: str
     time: str
 
+
 class CartaoVermelho(BaseModel):
     hora_cartao: str
     tempo_jogo: str
@@ -111,25 +125,32 @@ class CartaoVermelho(BaseModel):
     time: str
     aplicado: str
 
+
 class SegundaPagina(BaseModel):
     gols: list[Gols]
     cartoes_amarelo: list[CartoesAmarelo]
     cartoes_vermelho: list[CartaoVermelho]
     comissao: Comissao
 
+
 # Terceira Pagina
+
 
 class Ocorrencias(BaseModel):
     mensagem: str | None
 
+
 class Acrescimo(BaseModel):
     mensagem: str
+
 
 class Observacoes(BaseModel):
     mensagem: str
 
+
 class Assistente(BaseModel):
     mensagem: str
+
 
 class Substituicoes(BaseModel):
     hora_substituicao: str
@@ -148,7 +169,14 @@ class TerceiraPagina(BaseModel):
     assistente: Assistente
     substituicao: list[Substituicoes]
 
-class Sumula(BaseModel):
+
+class Sumula(Document):
     primeira_pagina: PrimeiraPagina
     segunda_pagina: SegundaPagina
     terceira_pagina: TerceiraPagina
+
+    def to_database(self):
+        return {
+            "ano": self.primeira_pagina.jogo.ano,
+            "jogo": self.primeira_pagina.jogo.jogo_num,
+        }

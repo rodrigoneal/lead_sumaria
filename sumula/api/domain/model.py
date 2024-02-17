@@ -34,3 +34,4 @@ class AgendamentoModel(Base):
 
     def __repr__(self) -> str:
         return f"AgendamentoModel(id={self.id!r}, data={self.data!r}, jogo={self.jogo!r}, status={self.status!r})"
+    

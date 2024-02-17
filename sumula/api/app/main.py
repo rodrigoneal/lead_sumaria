@@ -1,37 +1,29 @@
-from fastapi import FastAPI
-from sumula.api.domain.repositories.sumula import SumulaRepository
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
+import httpx
+from sumula.api.controller.sumula_controle import download_sumula_jogo
+from sumula.api.domain.crud import read
+from sumula.api.config import db 
+from sumula.entities.entities import Sumula
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await db.init()
+    await db.create_tables()
+    yield
 
 
-# @app.get("/")
-# async def root():
-#     response = SumulaRepository().get_all()
-#     return response
-
-# @app.get("/")
-# async def jogo(year: int, round: int):
-#     response = SumulaRepository().get_by_year_and_round(year, round)
-#     return response
-
-# @app.get("/")
-# async def all():
-#     response = SumulaRepository().get_all()
-#     return response
-# @app.get("/")
-# async def jogo(year: int, game_num: int):
-#     response = SumulaRepository().get_by_year_game_num(year, game_num)
-#     return response
-
-# @app.get("/")
-# async def ano(year: int):
-#     response = SumulaRepository().get_by_year(year)
-#     return response
+app = FastAPI(lifespan=lifespan)
 
 
-@app.get("/")
-async def search(time: str, ano: int, rodada: int =0 , jogo:int = 0):
-    response = SumulaRepository().get_by_team(time, ano, rodada, jogo)
-    return response
-
+@app.get("/", response_model=Sumula)
+async def search(ano: int, jogo: int):
+    result = await read(ano, jogo)
+    if not result:
+        try:
+            result = await download_sumula_jogo(ano, jogo)
+            await result.insert()
+        except httpx.HTTPStatusError:
+            raise  HTTPException(status_code=404, detail="Jogo não encontrado")
+    return result

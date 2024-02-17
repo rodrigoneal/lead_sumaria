@@ -6,6 +6,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, Asyn
 
 from sumula.api.domain.model import Base
 
+
+import motor.motor_asyncio
+from beanie import init_beanie
+
+from sumula.entities.entities import Sumula
+
+
 num_cpu = os.cpu_count()
 
 connection_pool_size = min(32, num_cpu + 4) if num_cpu else 4
@@ -13,6 +20,7 @@ connection_pool_size = min(32, num_cpu + 4) if num_cpu else 4
 
 class Settings:
     asyncpg_url: str = os.getenv("SQL_URL") or "sqlite+aiosqlite:///agendamento.db"
+    MONGO_URI: str = os.getenv("MONGO_URI") or "mongodb://localhost:27017"
 
 
 @cache
@@ -42,3 +50,9 @@ async def create_tables():
     """Cria as tabelas no banco de dados."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+
+async def init():
+    client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGO_URI)
+    await init_beanie(database=client.sumula, document_models=[Sumula])
