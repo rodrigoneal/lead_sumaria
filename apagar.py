@@ -1,5 +1,7 @@
 import asyncio
+from sumula.api.domain.model import AgendamentoModel
 from sumula.api.domain.repositories.sumula import SumulaRepository
+from sumula.entities.entities import Sumula
 from sumula.extract_text.pdf_handler import Crawler
 from aiotinydb import AIOTinyDB
 
@@ -9,6 +11,12 @@ competicao = "copa"
 
 num_jogos = 381 if competicao == "campeaonato" else 123
 
+
+
+async def salvar_sumula(model: Sumula):
+    async with AIOTinyDB('db.json') as db:
+        sumula_repository = SumulaRepository(db)
+        sumula_repository.insert(model)
 async def pegar_dados(ano, jogo):
     result = await crawler.pegar_todos_jogos(ano, jogo)
     async with AIOTinyDB('db.json') as db:
@@ -28,5 +36,4 @@ async def pegar_todos_jogos():
                 tasks = []
 
 
-
-asyncio.run(pegar_todos_jogos())
+# asyncio.run(pegar_todos_jogos())

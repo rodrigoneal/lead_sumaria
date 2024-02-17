@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import re
 
 import httpx
@@ -33,17 +34,19 @@ def pegar_data_jogo(html: str):
 def proximas_partidas():
     with httpx.Client() as client:
         response = client.get(
-            "https://www.cbf.com.br/futebol-brasileiro/competicoes/copa-brasil-masculino/2024"
+            "https://www.cbf.com.br/futebol-brasileiro/competicoes/copa-brasil-masculino/2023"
         )
         return response
     
 async def requisicao(url):
     async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(url)
-        except httpx.ReadTimeout:
-            await asyncio.sleep(1)
-            response = await client.get(url)
+        for _ in range(10):
+            try:
+                response = await client.get(url, timeout=10)
+                break
+            except httpx.ReadTimeout:
+                await asyncio.sleep(1)
+                continue
         return response
 
 
@@ -51,6 +54,7 @@ async def datas_dos_jogos():
     await create_tables()
     session = await get_session()
     agendamento = AgendamentoRepository(session)
+    
     tasks = []
     response = proximas_partidas()
     for link in pegar_link_partidas(response.text):
@@ -63,4 +67,16 @@ async def datas_dos_jogos():
             await agendamento.insert(
                 dado
             )
+async def proximos_jogos():
+    now = datetime.now()
+    session = await get_session()
+    agendamento = AgendamentoRepository(session)
+    return await agendamento.next_players(now)
+
+
+async def atualizar_status(ano, jogo):
+    session = await get_session()
+    agendamento = AgendamentoRepository(session)
+    return await agendamento.update(ano, jogo)
+
 

@@ -31,3 +31,6 @@ class AgendamentoModel(Base):
     __table_args__ = (
         UniqueConstraint('data', 'jogo', name='uq_data_jogo'),
     )
+
+    def __repr__(self) -> str:
+        return f"AgendamentoModel(id={self.id!r}, data={self.data!r}, jogo={self.jogo!r}, status={self.status!r})"
