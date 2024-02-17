@@ -129,7 +129,7 @@ def extrair_relacao_jogadores(pdf, template):
     try:
         nome_time_casa, nome_time_visitante = df.iloc[0, :].dropna()
     except ValueError:
-        breakpoint()
+        return
     escalacao_casa = df.iloc[2:, 0:6].dropna(how="all")
     escalacao_casa.columns = colunas
     mandante = {

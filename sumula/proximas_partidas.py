@@ -1,13 +1,14 @@
 import asyncio
 from datetime import datetime
+from functools import cache
 import re
 
-import httpx
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
 from sumula.api.app.config.db import create_tables, get_session
 from sumula.api.domain.repositories.agendamento import AgendamentoRepository
+from sumula.download.pdf_downloader import proximas_partidas, requisicao
 
 
 def pegar_link_partidas(html: str):
@@ -30,31 +31,15 @@ def pegar_data_jogo(html: str):
         jogo = re.search(padrao_jogo, partida.text).group(1)
         yield {"data": parse(data, dayfirst=True), "jogo": jogo} 
 
-
-def proximas_partidas():
-    with httpx.Client() as client:
-        response = client.get(
-            "https://www.cbf.com.br/futebol-brasileiro/competicoes/copa-brasil-masculino/2023"
-        )
-        return response
-    
-async def requisicao(url):
-    async with httpx.AsyncClient() as client:
-        for _ in range(10):
-            try:
-                response = await client.get(url, timeout=10)
-                break
-            except httpx.ReadTimeout:
-                await asyncio.sleep(1)
-                continue
-        return response
+@cache
+async def agendamento_repository():
+    session = await get_session()
+    return AgendamentoRepository(session)
 
 
 async def datas_dos_jogos():
     await create_tables()
-    session = await get_session()
-    agendamento = AgendamentoRepository(session)
-    
+    agendamento = await agendamento_repository()
     tasks = []
     response = proximas_partidas()
     for link in pegar_link_partidas(response.text):
@@ -69,14 +54,12 @@ async def datas_dos_jogos():
             )
 async def proximos_jogos():
     now = datetime.now()
-    session = await get_session()
-    agendamento = AgendamentoRepository(session)
+    agendamento = await agendamento_repository()
     return await agendamento.next_players(now)
 
 
 async def atualizar_status(ano, jogo):
-    session = await get_session()
-    agendamento = AgendamentoRepository(session)
+    agendamento = await agendamento_repository()
     return await agendamento.update(ano, jogo)
 
 

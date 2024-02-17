@@ -1,7 +1,5 @@
 from os import PathLike
-from tempfile import NamedTemporaryFile
 import PyPDF2
-import httpx
 
 from sumula.extract_text.extract_text import (
     dados_acrescimos,
@@ -123,17 +121,14 @@ class PDFHandler:
         for jogador in jogadores:
             _temp = []
             for escalacao in jogador["escalacao"]:
-                try:
-                    relacao = RelacaoJogadores(
-                        numero=escalacao["No"],
-                        apelido=escalacao["Apelido"],
-                        nome=escalacao["Nome Completo"],
-                        t_r=escalacao["T/R"],
-                        p_a=escalacao["P/A"],
-                        cbf=escalacao["CBF"],
-                    )
-                except:
-                    breakpoint()
+                relacao = RelacaoJogadores(
+                    numero=escalacao["No"],
+                    apelido=escalacao["Apelido"],
+                    nome=escalacao["Nome Completo"],
+                    t_r=escalacao["T/R"],
+                    p_a=escalacao["P/A"],
+                    cbf=escalacao["CBF"],
+                )
                 _temp.append(relacao)
             times.append(Equipe(time=jogador["time"], escalao=_temp))
         escalacao = Escalacao(mandante=times[0], visitante=times[1])
@@ -179,8 +174,6 @@ class PDFHandler:
         _acrescimos = dados_acrescimos(text)
         _observacoes = dados_observacoes_eventuais(text)
         _assistente = dados_relatorio_assistente(text)
-        # _substituicao = dados_substituicao(self.pdf, num_page=num_page)
-        # if not _substituicao:
         _substituicao = dados_substituicao_2(text, self.mandante, self.visitante)
         ocorrencias = Ocorrencias(mensagem=_ocorrencias)
         acrescimos = Acrescimo(mensagem=_acrescimos)
@@ -231,28 +224,3 @@ class PDFHandler:
                 text_page_three, num_page=len(self.read_pdf.pages)
             ),
         )
-
-
-class PDFDownloader:
-    def __init__(self):
-        # self.url = "https://conteudo.cbf.com.br/sumulas/{ano}/142{jogo}se.pdf"
-        self.url = "https://conteudo.cbf.com.br/sumulas/{ano}/424{jogo}se.pdf"
-
-    async def requisicao(self, ano: str, jogo: str):
-        async with httpx.AsyncClient() as client:
-            response = await client.get(self.url.format(ano=ano, jogo=jogo))
-            with NamedTemporaryFile(delete=False, suffix=".pdf") as file:
-                print(f"Salvando >>>> {file.name}")
-                file.write(response.content)
-                return file.name
-
-
-class Crawler:
-    def __init__(self):
-        self.PDF_downloader = PDFDownloader()
-        self.erros = []
-
-    async def pegar_todos_jogos(self, ano, jogo):
-        print(f"Ano: {ano} - Jogo: {jogo}")
-        pdf = await self.PDF_downloader.requisicao(ano, jogo)
-        return PDFHandler(pdf).sumula()

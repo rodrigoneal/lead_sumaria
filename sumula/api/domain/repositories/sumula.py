@@ -1,5 +1,5 @@
 from sumula.entities.entities import Sumula as SumulaEntities
-from tinydb import TinyDB, Query
+from tinydb import Query
 
 
 class SumulaRepository:
