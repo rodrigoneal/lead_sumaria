@@ -1,4 +1,5 @@
 from os import PathLike
+from pathlib import Path
 import PyPDF2
 
 from sumula.extract_text.extract_text import (
@@ -44,6 +45,7 @@ from sumula.entities.entities import (
     Sumula,
     TerceiraPagina,
 )
+from sumula.log import logger
 
 
 class PDFHandler:
@@ -65,6 +67,7 @@ class PDFHandler:
         return self.read_pdf.pages[pagina].extract_text()
 
     def primeira_pagina(self, text: str):
+        logger.info(f"Extraindo a primeira pagina do PDF {self.pdf}")
         partida = dados_partida(text)
         jogo_num = dados_jogo_numero(text)
         arbitragem = dados_arbitragem(text)
@@ -75,6 +78,8 @@ class PDFHandler:
             template = "maior_template.json"
         else:
             template = "template_jogadores.json"
+        path = Path("sumula/assets/templates") / template
+        template = str(path.resolve())
         jogadores = extrair_relacao_jogadores(self.pdf, template)
         _jogo = Jogo(**partida, jogo_num=jogo_num)
         _arbitragem = [Arbitragem(**arbitro) for arbitro in arbitragem]
@@ -209,9 +214,11 @@ class PDFHandler:
         return " ".join(paginas)
 
     def sumula(self):
+        logger.info(f"Extraindo Sumula para o PDF {self.pdf}")
         text_page_one = self.read_pdf.pages[0].extract_text()
         text_page_two = self.read_pdf.pages[1].extract_text()
         text_page_three = self.read_pdf.pages[-1].extract_text()
+        logger.info(f"PDF com {len(self.read_pdf.pages)} paginas")
         if len(self.read_pdf.pages) > 3:
             text_page_two = self.get_pages(
                 "\nCartões Amarelos", "Ocorrências / Observações"

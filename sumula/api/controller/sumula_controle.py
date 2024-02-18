@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
+from sumula.api.config.db import init
 from sumula.api.domain.crud import insert
 from sumula.download.pdf_downloader import download_pdf_sumula, proximas_partidas, requisicao
 from sumula.extract_text.pdf_handler import PDFHandler
+from sumula.log import logger
 from sumula.proximas_partidas import agendamento_repository, extrair_data_jogo, extrair_link_partidas
 
 
@@ -11,9 +13,10 @@ async def download_sumula_jogo(ano, jogo):
     return PDFHandler(pdf_sumula).sumula()
 
 async def salvar_proximos_jogos():
+    logger.info("Salvando proximos jogos")
     agendamento = await agendamento_repository()
     tasks = []
-    ano = 2023
+    ano = datetime.now().year
     response = await proximas_partidas(ano)
     for link in extrair_link_partidas(response.text):
         task = asyncio.create_task(requisicao(link))
@@ -25,14 +28,18 @@ async def salvar_proximos_jogos():
             await agendamento.insert(
                 dado
             )
+    logger.info("Proximos jogos salvos")
     
 
 
 async def download_sumulas():
+    logger.info("Baixando sumulas")
     agendamento = await agendamento_repository()
+    await init()
     now = datetime.now()
     results = await agendamento.next_players(now)
     tasks = []
+    logger.info(f"Proximos jogos: {results}")
     for result in results:
         task = asyncio.create_task(download_sumula_jogo(result.data.year, result.jogo))
         tasks.append(task)
@@ -47,4 +54,5 @@ async def download_sumulas():
             sumula = await task
             await insert(sumula)
             await agendamento.update(**sumula.to_database())
+    logger.info("Sumulas baixadas")
     

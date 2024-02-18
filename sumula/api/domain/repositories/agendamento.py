@@ -5,6 +5,8 @@ from sqlalchemy import select, update, extract
 from sumula.api.domain.model import AgendamentoModel
 from sqlalchemy.exc import IntegrityError
 
+from sumula.log import logger
+
 
 class AgendamentoRepository:
     def __init__(self, session: AsyncSession):
@@ -18,12 +20,14 @@ class AgendamentoRepository:
                 await session.commit()
             except IntegrityError:
                 await session.rollback()
+                logger.info(f"Agendamento ja existe: {model}")
                 return
-            print("Salvando Data >>>")
+            logger.info(f"Agendamento inserido: {model}")
             await session.refresh(model)
             return model
 
     async def next_players(self, data: datetime):
+        logger.info(f"Proximos jogos: {data}")
         query = select(AgendamentoModel).where(
             (AgendamentoModel.data <= data) & (AgendamentoModel.status == "pendente")
         )
@@ -32,6 +36,7 @@ class AgendamentoRepository:
             return result.scalars()
 
     async def update(self, ano, jogo):
+        logger.info(f"Atualizando agendamento: {ano} {jogo}")
         query = (
             update(AgendamentoModel)
             .where((extract('year', AgendamentoModel.data) == ano) & (AgendamentoModel.jogo == jogo))

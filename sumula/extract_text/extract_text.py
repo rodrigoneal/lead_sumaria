@@ -2,6 +2,9 @@ import re
 import tabula
 
 from sumula.extract_text.clear_text import remover_texto
+from sumula.log import logger
+
+
 
 
 def dados_jogo_numero(texto: str):
@@ -35,6 +38,7 @@ def limpar_dados_partida(texto: str):
 
 
 def dados_partida(texto: str) -> dict[str, str]:
+    logger.info("Extraindo dados da partida")
     dados = extrair_dados_partida(texto)
     return limpar_dados_partida(dados)
 

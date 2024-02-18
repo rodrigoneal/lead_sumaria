@@ -1,5 +1,4 @@
 from datetime import datetime
-from functools import cache
 import re
 
 from bs4 import BeautifulSoup
@@ -7,6 +6,7 @@ from dateutil.parser import parse
 
 from sumula.api.config.db import  get_session
 from sumula.api.domain.repositories.agendamento import AgendamentoRepository
+from sumula.log import logger
 
 
 
@@ -18,6 +18,7 @@ def extrair_link_partidas(html: str):
         href=lambda href: href and href.startswith("https://www.cbf.com.br"),
     )
     for link in links:
+        logger.info(f"Link: {link.get('href')}")
         yield link.get("href")
 
 def extrair_data_jogo(html: str):
@@ -28,6 +29,7 @@ def extrair_data_jogo(html: str):
     for partida in partidas:
         data = re.search(padrao_data, partida.text).group(0)
         jogo = re.search(padrao_jogo, partida.text).group(1)
+        logger.info(f"Data: {data} Jogo: {jogo}")
         yield {"data": parse(data, dayfirst=True), "jogo": jogo} 
 
 async def agendamento_repository():
