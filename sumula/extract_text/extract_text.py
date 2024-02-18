@@ -50,6 +50,8 @@ def extrair_dados_arbitragem(texto: str):
 
 def limpar_dados_arbitragem(texto: str):
     arbitros = []
+    if ":\n" in texto:
+        texto = texto.replace(":\n", ":")
     dados = texto.splitlines()
     for dado in dados:
         if dado:
@@ -87,7 +89,8 @@ def limpar_dados_cronologia(texto: str):
                 key_name = "Resultado"
                 dados = dados[0].rsplit("Resultado", 1)
             else:
-                breakpoint()
+                logger.error("Erro ao extrair dados da cronologia")
+                raise ValueError
 
             _temp = f"{key_name} {dados[-1].strip()}"
             dados[-1] = _temp
@@ -141,7 +144,11 @@ def extrair_relacao_jogadores(pdf, template):
         "escalacao": escalacao_casa.fillna("").to_dict(orient="records"),
     }
     escalacao_visitante = df.iloc[2:, 6:].dropna(how="all")
-    escalacao_visitante.columns = colunas
+    try:
+        escalacao_visitante.columns = colunas
+    except ValueError:
+        logger.critical("Erro ao extrair colunas")
+        raise ValueError
     visitante = {
         "time": nome_time_visitante,
         "escalacao": escalacao_visitante.fillna("").to_dict(orient="records"),
@@ -230,7 +237,8 @@ def extrair_dados_cartao_amarelos(text: str):
     correspondencia = regex.search(text)
     if correspondencia:
         return correspondencia.group(1)
-    breakpoint()
+    logger.critical("Erro ao extrair dados de cartão amarelo")
+    raise ValueError
 
 
 def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: str):
@@ -258,7 +266,8 @@ def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: st
         elif _visitante in dados:
             equipe = visitante
         else:
-            breakpoint()
+            logger.critical("Erro ao extrair equipe")
+            raise ValueError
         _equipe = equipe.replace(" / ", "/")
         dados = dados.replace(_equipe, "").strip()
         dados = dados.replace(tempo, "").strip()
@@ -288,7 +297,11 @@ def extrair_dados_cartao_vermelhos(text: str):
     correspondencia = regex.search(text)
     if correspondencia:
         return correspondencia.group(1).replace("\nTempo 1T/2TNºNome do Jogador\n", "")
-    breakpoint()
+    elif "Cartões Vermelhos" in text and text.endswith("."):
+        texto = text[text.find("Cartões Vermelhos"):].replace("Cartões Vermelhos", "")
+        return texto.replace("\nTempo 1T/2TNºNome do Jogador\n", "").replace("\nTempo1T/2TNºNome do Jogador\n", "")
+    logger.critical("Erro ao extrair dados de cartão vermelho")
+    raise ValueError
 
 
 def limpar_dados_cartao_vermelho(text: str):
@@ -296,9 +309,10 @@ def limpar_dados_cartao_vermelho(text: str):
         if "\nNÃO HOUVE EXPULSÕES\n" in text:
             return []
     except TypeError:
-        breakpoint()
+        logger.critical("Erro ao limpar dados de cartão vermelho")
+        raise ValueError
     padrao = r"\d+:\d+|\+\d+:\d+|-PJ"
-    padrao_horario = r"(\d+:\d+|\+\d+:\d+|-PJ)"
+    padrao_horario = r"(\d+:\d{0,2}|\+\d+:\d{0,2}|-PJ)"
     textos = re.split(padrao, text)
     if not textos[0] or "NºNome do Jogador" in textos[0]:
         textos = textos[1:]
@@ -312,7 +326,8 @@ def limpar_dados_cartao_vermelho(text: str):
         try:
             hora = horarios[contador] if not horarios[contador].startswith("-") else "-"
         except IndexError:
-            breakpoint()
+            logger.critical("Erro ao limpar dados de cartão vermelho")
+            raise ValueError
         try:
             tempo = re.search(r"\s([12][Tt])", texto).group(1)
         except AttributeError:
@@ -437,7 +452,8 @@ def dados_substituicao(pdf: str, num_page):
     try:
         df = tables[-1]
     except IndexError:
-        breakpoint()
+        logger.critical(f"PDF com {len(tables)} paginas")
+        raise ValueError
     df = df.iloc[1:-1, :]
     try:
         df.columns = ["hora_substituicao", "tempo", "time", "entrou", "saiu"]
@@ -454,7 +470,7 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
     except AttributeError:
         return "Nada a relatar."
     padrao = r"\d+:\d+|\+\d+:\d+|-PJ"
-    padrao_horario = r"(\d+:\d+|\+\d+:\d+|-PJ)"
+    padrao_horario = r"(\d+:\d{0,2}|\+\d+:\d{0,2}|-PJ)"
     padrao_numero = r"\d+"
     horarios = re.findall(padrao_horario, texto)
     textos = re.split(padrao, texto)
@@ -475,8 +491,11 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
             elif _visitante.rsplit(" ", 1)[0] in texto:
                 equipe = _visitante
             else:
-                breakpoint()
-        hora = horarios[contador]
+                continue
+        try:
+            hora = horarios[contador]
+        except IndexError:
+            hora = horarios[contador - 1]
         try:
             tempo, dados = texto.split(equipe)
         except ValueError:

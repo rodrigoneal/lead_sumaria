@@ -10,7 +10,7 @@ from sumula.proximas_partidas import agendamento_repository, extrair_data_jogo, 
 
 async def download_sumula_jogo(ano, jogo):
     pdf_sumula = await download_pdf_sumula(ano, jogo)
-    return PDFHandler(pdf_sumula).sumula()
+    return PDFHandler(**pdf_sumula).sumula()
 
 async def salvar_proximos_jogos():
     logger.info("Salvando proximos jogos")

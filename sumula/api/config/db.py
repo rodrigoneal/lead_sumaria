@@ -5,6 +5,7 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 
 from sumula.api.domain.model import Base
+from dotenv import load_dotenv
 
 
 import motor.motor_asyncio
@@ -17,6 +18,7 @@ num_cpu = os.cpu_count()
 
 connection_pool_size = min(32, num_cpu + 4) if num_cpu else 4
 
+load_dotenv()
 
 class Settings:
     asyncpg_url: str = os.getenv("SQL_URL") or "sqlite+aiosqlite:///agendamento.db"

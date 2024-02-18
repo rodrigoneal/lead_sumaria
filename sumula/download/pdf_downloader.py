@@ -46,4 +46,4 @@ async def download_pdf_sumula(
     with NamedTemporaryFile(delete=False, suffix=".pdf") as file:
         file.write(response.content)
         logger.info(f"Salvando PDF no arquivo: {file.name}")
-        return file.name
+        return {"pdf": file.name, "url": url}

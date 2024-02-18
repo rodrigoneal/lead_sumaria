@@ -49,8 +49,9 @@ from sumula.log import logger
 
 
 class PDFHandler:
-    def __init__(self, pdf: PathLike):
+    def __init__(self, pdf: PathLike, url: str):
         self.pdf = pdf
+        self.url = url
         self.read_pdf = self._read_pdf(pdf)
         self.mandante, self.visitante = self.dados_jogo(self.pegar_pagina(0))
 
@@ -89,7 +90,14 @@ class PDFHandler:
             try:
                 resultado = cronologia[-2]["Resultado do 1º Tempo"]
             except KeyError:
-                breakpoint()
+                logger.critical("Erro ao extrair resultado")
+                raise ValueError
+        if "Resultado Final:" in resultado:
+            find_erro = resultado.find("Resultado Final:")            
+            error = resultado[find_erro + len("Resultado Final:"):].strip()
+            resultado = resultado[:find_erro].strip()
+        else:
+            error = None
         cronologia_primeiro = Cronologia1T(
             entrada_mandante=cronologia[0]["Entrada do mandante"],
             atraso_mandante=cronologia[0]["Atraso"],
@@ -101,10 +109,17 @@ class PDFHandler:
             acrescimo=cronologia[3]["Acréscimo"],
             resultado=resultado,
         )
-        try:
-            resultado = cronologia[-1]["Resultado Final"]
-        except KeyError:
-            resultado = cronologia[-2]["Resultado Final"]
+        if error:
+            resultado = error
+        else:
+            try:
+                resultado = cronologia[-1]["Resultado Final"]
+            except KeyError:
+                try:
+                    resultado = cronologia[-2]["Resultado Final"]
+                except KeyError:
+                    logger.critical("Erro ao extrair resultado")
+                    raise ValueError
 
         cronologia_segundo = Cronologia2T(
             entrada_mandante=cronologia[4]["Entrada do mandante"],
@@ -126,14 +141,25 @@ class PDFHandler:
         for jogador in jogadores:
             _temp = []
             for escalacao in jogador["escalacao"]:
-                relacao = RelacaoJogadores(
-                    numero=escalacao["No"],
-                    apelido=escalacao["Apelido"],
-                    nome=escalacao["Nome Completo"],
-                    t_r=escalacao["T/R"],
-                    p_a=escalacao["P/A"],
-                    cbf=escalacao["CBF"],
-                )
+                try:
+                    relacao = RelacaoJogadores(
+                        numero=escalacao["No"],
+                        apelido=escalacao["Apelido"],
+                        nome=escalacao["Nome Completo"],
+                        t_r=escalacao["T/R"],
+                        p_a=escalacao["P/A"],
+                        cbf=escalacao["CBF"],
+                    )
+                except KeyError:
+                    _escalacao = tuple(escalacao.values())
+                    relacao = RelacaoJogadores(
+                        numero=_escalacao[0],
+                        apelido=_escalacao[1],
+                        nome=_escalacao[2],
+                        t_r=_escalacao[3],
+                        p_a=_escalacao[4],
+                        cbf=_escalacao[5],
+                    )
                 _temp.append(relacao)
             times.append(Equipe(time=jogador["time"], escalao=_temp))
         escalacao = Escalacao(mandante=times[0], visitante=times[1])
@@ -230,4 +256,5 @@ class PDFHandler:
             terceira_pagina=self.terceira_pagina(
                 text_page_three, num_page=len(self.read_pdf.pages)
             ),
+            url_pdf=self.url,
         )

@@ -174,6 +174,7 @@ class Sumula(Document):
     primeira_pagina: PrimeiraPagina
     segunda_pagina: SegundaPagina
     terceira_pagina: TerceiraPagina
+    url_pdf: str
 
     def to_database(self):
         return {
