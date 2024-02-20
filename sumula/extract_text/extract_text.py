@@ -8,6 +8,7 @@ from sumula.logger import logger
 
 
 def dados_jogo_numero(texto: str):
+    logger.info("Extraindo dados do jogo")    
     return re.search(r"Jogo:([\s\S]*?)CBF - ", texto).group(1).strip()
 
 
@@ -64,6 +65,7 @@ def limpar_dados_arbitragem(texto: str):
 
 
 def dados_arbitragem(texto: str) -> list[dict[str, str]]:
+    logger.info("Extraindo dados da arbitragem")
     dados = extrair_dados_arbitragem(texto)
     return limpar_dados_arbitragem(dados)
 
@@ -120,6 +122,7 @@ def limpar_dados_cronologia(texto: str):
 # [{'Entrada do mandante': '18:50', 'Atraso': 'Não Houve'}, {'Entrada do visitante': '18:50', 'Atraso': 'Não Houve'}, {'Início 1º Tempo': '19:00', 'Atraso': 'Não Houve'}, {'Término do 1º Tempo': '19:48', 'Acréscimo': '3 min'}, {'Entrada do mandante': '20:01', 'Atraso': 'Não Houve'}, {'Entrada do visitante': '20:01', 'Atraso': 'Não Houve'}, {'Início do 2º Tempo': '20:03', 'Atraso': 'Não Houve'}, {'Término do 2º Tempo': '20:56', 'Acréscimo': '8 min'}, {'Resultado do 1º Tempo': '1 X 2', 'Resultado Final': '3 X 2'}]
 
 def dados_cronologogia(texto: str) -> list[dict[str, str]]:
+    logger.info("Extraindo dados da cronologia")
     dados = extrair_dados_cronologia(texto)
     return limpar_dados_cronologia(dados)
 
@@ -187,6 +190,7 @@ def limpar_comissao_tecnica(
 
 
 def dados_comissao_tecnica(texto: str, nome_mandante: str, nome_visitante: str):
+    logger.info("Extraindo dados da comissão tecnica")
     dados = extrair_comissao_tecnica(texto)
     return limpar_comissao_tecnica(dados, nome_mandante, nome_visitante)
 
@@ -228,6 +232,7 @@ def limpar_dados_gols(dados_gols: list[str], mandante: str, visitante: str):
 
 
 def dados_gols(texto: str, mandante: str, visitante: str):
+    logger.info("Extraindo dados dos gols")
     dados = extrair_dados_gols(texto)
     return limpar_dados_gols(dados, mandante, visitante)
 
@@ -288,6 +293,7 @@ def limpar_dados_cartao_amarelos(dados_cartao: str, mandante: str, visitante: st
 
 
 def dados_cartao_amarelo(texto: str, mandante: str, visitante: str):
+    logger.info("Extraindo dados de cartão amarelo")
     dados = extrair_dados_cartao_amarelos(texto)
     return limpar_dados_cartao_amarelos(dados, mandante, visitante)
 
@@ -373,6 +379,7 @@ def limpar_dados_cartao_vermelho(text: str):
 
 
 def dados_cartao_vermelho(texto: str):
+    logger.info("Extraindo dados de cartão vermelho")
     dados = extrair_dados_cartao_vermelhos(texto)
     return limpar_dados_cartao_vermelho(dados)
 
@@ -390,6 +397,7 @@ def limpar_dados_ocorrencias(texto: str):
 
 
 def dados_ocorrencias(texto: str):
+    logger.info("Extraindo dados de ocorrencias")
     dados = extrair_dados_ocorrencias(texto)
     return limpar_dados_ocorrencias(dados)
 
@@ -406,6 +414,7 @@ def limpar_dados_acrescimos(texto: str):
 
 
 def dados_acrescimos(texto: str):
+    logger.info("Extraindo dados de acrescimos")
     dados = extrair_dados_acrescimos(texto)
     return limpar_dados_acrescimos(dados)
 
@@ -426,6 +435,7 @@ def limpar_dados_observacoes_eventuais(texto: str):
 
 
 def dados_observacoes_eventuais(texto: str):
+    logger.info("Extraindo dados de observacoes eventuais")
     dados = extrair_dados_observacoes_eventuais(texto)
     return limpar_dados_observacoes_eventuais(dados)
 
@@ -443,11 +453,13 @@ def limpar_dados_relatorio_assistente(texto: str):
 
 
 def dados_relatorio_assistente(texto: str):
+    logger.info("Extraindo dados do relatorio assistente")
     dados = extrair_dados_relatorio_assistente(texto)
     return limpar_dados_relatorio_assistente(dados)
 
 
 def dados_substituicao(pdf: str, num_page):
+    logger.info("Extraindo dados de substituições")
     tables = tabula.read_pdf(pdf, pages=num_page, stream=True)
     try:
         df = tables[-1]
@@ -464,6 +476,7 @@ def dados_substituicao(pdf: str, num_page):
 
 
 def dados_substituicao_2(text: str, mandante: str, visitante: str):
+    logger.info("Extraindo dados de substituições")
     regex = re.compile(r"Substituições([\s\S]*?)Confederação Brasileira de Futebol")
     try:
         texto = regex.search(text).group(1)
