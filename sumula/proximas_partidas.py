@@ -3,7 +3,7 @@ import re
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
-from sumula.log import logger
+from sumula.logger import logger
 
 
 

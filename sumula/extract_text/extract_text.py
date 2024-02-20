@@ -2,7 +2,7 @@ import re
 import tabula
 
 from sumula.extract_text.clear_text import remover_texto
-from sumula.log import logger
+from sumula.logger import logger
 
 
 

@@ -5,7 +5,7 @@ from sumula.api.domain.crud import insert
 from sumula.download.pdf_downloader import download_pdf_sumula, proximas_partidas, requisicao
 from sumula.etc.file_handler import deletar_temp
 from sumula.extract_text.pdf_handler import PDFHandler
-from sumula.log import logger
+from sumula.logger import logger
 # from sumula.proximas_partidas import agendamento_repository, extrair_data_jogo, extrair_link_partidas
 
 

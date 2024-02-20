@@ -4,7 +4,7 @@ from tempfile import NamedTemporaryFile
 from typing import Literal
 import httpx
 
-from sumula.log import logger
+from sumula.logger import logger
 
 
 

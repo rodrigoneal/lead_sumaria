@@ -1,5 +1,5 @@
 from sumula.entities.entities import Sumula
-from sumula.log import logger
+from sumula.logger import logger
 
 
 async def insert(sumula: Sumula):

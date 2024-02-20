@@ -45,7 +45,7 @@ from sumula.entities.entities import (
     Sumula,
     TerceiraPagina,
 )
-from sumula.log import logger
+from sumula.logger import logger
 
 
 class PDFHandler:

@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from sumula.log import logger
+from sumula.logger import logger
 
 
 def deletar_temp():
