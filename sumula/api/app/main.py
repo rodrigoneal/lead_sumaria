@@ -24,11 +24,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan,docs_url="/sumula/documentation", redoc_url=None)
 
-@app.get("/", include_in_schema=False)
+@app.get("/sumula/", include_in_schema=False)
 async def root():
-    return RedirectResponse("/docs")
+    return RedirectResponse("/documentation")
 
 @app.get("/sumula", response_model=Sumula)
 async def search(user: Annotated[AuthenticationModel, Depends(check_api_key)], ano: Annotated[int, Query(example=2023)], jogo: Annotated[int, Query(example=10, title="Numero da partida")]):

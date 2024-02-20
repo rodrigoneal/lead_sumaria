@@ -1,0 +1,42 @@
+  GNU nano 6.2                                                                                                                         fastapi_nginx                                                                                                                                  
+server {
+    listen 80;
+    server_name 52.207.51.122;
+
+    # Redirecionamento para HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;
+    server_name 52.207.51.122;
+
+    location /gnre/ {
+        proxy_pass http://127.0.0.1:8000;
+    }
+   location /sumula/ {
+        proxy_pass http://127.0.0.1:8001;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+^G Help           ^O Write Out      ^W Where Is       ^K Cut            ^T Execute        ^C Location       M-U Undo          M-A Set Mark      M-] To Bracket    M-Q Previous      ^B Back           ^◂ Prev Word      ^A Home           ^P Prev Line      M-▴ Scroll Up
+^X Exit           ^R Read File      ^\ Replace        ^U Paste          ^J Justify        ^/ Go To Line     M-E Redo          M-6 Copy          ^Q Where Was      M-W Next          ^F Forward        ^▸ Next Word      ^E End            ^N Next Line      M-▾ Scroll Down

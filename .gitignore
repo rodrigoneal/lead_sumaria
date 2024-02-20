@@ -574,7 +574,6 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudio
 *.pdf
-*.json
 *.db
 agendamento.db
 db.json
