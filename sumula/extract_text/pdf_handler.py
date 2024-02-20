@@ -93,8 +93,8 @@ class PDFHandler:
                 logger.critical("Erro ao extrair resultado")
                 raise ValueError
         if "Resultado Final:" in resultado:
-            find_erro = resultado.find("Resultado Final:")            
-            error = resultado[find_erro + len("Resultado Final:"):].strip()
+            find_erro = resultado.find("Resultado Final:")
+            error = resultado[find_erro + len("Resultado Final:") :].strip()
             resultado = resultado[:find_erro].strip()
         else:
             error = None
@@ -177,6 +177,7 @@ class PDFHandler:
         )
 
     def segunda_pagina(self, text: str):
+        logger.info(f"Extraindo a segunda pagina do PDF {self.pdf}")
         if not self.mandante or not self.visitante:
             self.extrair_times(text)
         comissoes = dados_comissao_tecnica(text, self.mandante, self.visitante)
@@ -200,7 +201,8 @@ class PDFHandler:
             cartoes_vermelho=cartao_vermelho,
         )
 
-    def terceira_pagina(self, text: str, num_page: int):
+    def terceira_pagina(self, text: str):
+        logger.info(f"Extraindo a terceira pagina do PDF {self.pdf}")
         _ocorrencias = dados_ocorrencias(text)
         _acrescimos = dados_acrescimos(text)
         _observacoes = dados_observacoes_eventuais(text)
@@ -241,20 +243,27 @@ class PDFHandler:
 
     def sumula(self):
         logger.info(f"Extraindo Sumula para o PDF {self.pdf}")
-        text_page_one = self.read_pdf.pages[0].extract_text()
-        text_page_two = self.read_pdf.pages[1].extract_text()
-        text_page_three = self.read_pdf.pages[-1].extract_text()
-        logger.info(f"PDF com {len(self.read_pdf.pages)} paginas")
-        if len(self.read_pdf.pages) > 3:
-            text_page_two = self.get_pages(
-                "\nCartões Amarelos", "Ocorrências / Observações"
+        qtd_paginas = len(self.read_pdf.pages)
+
+        primeira_pagina = self.primeira_pagina(self.read_pdf.pages[0].extract_text())
+        if qtd_paginas > 3:
+            logger.info(f"PDF com {len(self.read_pdf.pages)} paginas")
+            segunda_pagina = self.segunda_pagina(
+                self.get_pages("\nCartões Amarelos", "Ocorrências / Observações")
             )
-            text_page_three = self.get_pages("Ocorrências", None)
-        return Sumula(
-            primeira_pagina=self.primeira_pagina(text_page_one),
-            segunda_pagina=self.segunda_pagina(text_page_two),
-            terceira_pagina=self.terceira_pagina(
-                text_page_three, num_page=len(self.read_pdf.pages)
-            ),
+            terceira_pagina = self.terceira_pagina(
+                self.get_pages("Ocorrências", None)
+            )
+        else:
+            segunda_pagina = self.segunda_pagina(self.read_pdf.pages[1].extract_text())
+            terceira_pagina = self.terceira_pagina(
+                self.read_pdf.pages[-1].extract_text()
+            )
+        sumula = Sumula(
+            primeira_pagina=primeira_pagina,
+            segunda_pagina=segunda_pagina,
+            terceira_pagina=terceira_pagina,
             url_pdf=self.url,
         )
+        del self.read_pdf
+        return sumula
