@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import JSON, TIMESTAMP, BigInteger, Boolean, Column, Integer, String, UniqueConstraint
 
 
 class Base(DeclarativeBase):
@@ -13,25 +13,26 @@ class Base(DeclarativeBase):
 
     pass
 
-class AgendamentoModel(Base):
-    """
-    Tabela de agendamento de partidas.
+class AuthenticationModel(Base):
+    __tablename__ = 'adm_clients'
 
-    Args:
-        Base (DeclarativeBase): Classe base do SQLAlchemy
-    """
-
-    __tablename__ = "agendamento"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    data: Mapped[datetime] = mapped_column(nullable=False)
-    jogo: Mapped[str] = mapped_column(nullable=False)
-    status: Mapped[str] = mapped_column(nullable=False, default="pendente")
-
-    __table_args__ = (
-        UniqueConstraint('data', 'jogo', name='uq_data_jogo'),
-    )
-
-    def __repr__(self) -> str:
-        return f"AgendamentoModel(id={self.id!r}, data={self.data!r}, jogo={self.jogo!r}, status={self.status!r})"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id_account = Column(Integer, nullable=False)
+    codigo_cliente = Column(String(255))
+    razao_social = Column(String(255))
+    nick_name = Column(String(255))
+    cnpj = Column(String(255))
+    tipo_empresa = Column(String(255))
+    uf = Column(String(255))
+    chave_api_1 = Column(String(255))
+    chave_api_2 = Column(String(255))
+    chave_api_3 = Column(String(255))
+    codigo_generico_1 = Column(String(255))
+    codigo_generico_2 = Column(String(255))
+    modules = Column(JSON)
+    subModules = Column(JSON)
+    status = Column(Boolean)
+    created_by = Column(String(255))
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
     

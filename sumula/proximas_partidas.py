@@ -1,11 +1,8 @@
-from datetime import datetime
 import re
 
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
-from sumula.api.config.db import  get_session
-from sumula.api.domain.repositories.agendamento import AgendamentoRepository
 from sumula.log import logger
 
 
@@ -32,22 +29,22 @@ def extrair_data_jogo(html: str):
         logger.info(f"Data: {data} Jogo: {jogo}")
         yield {"data": parse(data, dayfirst=True), "jogo": jogo} 
 
-async def agendamento_repository():
-    session = await get_session()
-    return AgendamentoRepository(session)
+# async def agendamento_repository():
+#     session = await get_session()
+#     return AgendamentoRepository(session)
 
 
 
-async def proximos_jogos():
-    now = datetime.now()
-    agendamento = await agendamento_repository()
-    return await agendamento.next_players(now)
+# async def proximos_jogos():
+#     now = datetime.now()
+#     agendamento = await agendamento_repository()
+#     return await agendamento.next_players(now)
 
 
-async def atualizar_status(ano, jogo):
-    agendamento = await agendamento_repository()
-    return await agendamento.update(ano, jogo)
+# async def atualizar_status(ano, jogo):
+#     agendamento = await agendamento_repository()
+#     return await agendamento.update(ano, jogo)
 
-async def salvar_jogo(ano, jogo):
-    agendamento = await agendamento_repository()
-    return await agendamento.next_players(ano, jogo)
+# async def salvar_jogo(ano, jogo):
+#     agendamento = await agendamento_repository()
+#     return await agendamento.next_players(ano, jogo)

@@ -1,14 +1,14 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends
 from fastapi.responses import RedirectResponse
 import httpx
-from sumula.api.controller.sumula_controle import download_sumula_jogo, download_sumulas, salvar_proximos_jogos
+from sumula.api.controller.sumula_controle import download_sumula_jogo
 from sumula.api.domain.crud import read
-from sumula.api.config import db 
+from sumula.api.config import db
+from sumula.api.domain.model import AuthenticationModel
+from sumula.api.providers.auth import check_api_key 
 from sumula.entities.entities import Sumula
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 
 import warnings
@@ -19,14 +19,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = AsyncIOScheduler()
     await db.init()
     await db.create_tables()
-    scheduler.add_job(salvar_proximos_jogos, CronTrigger(hour="1"))
-    scheduler.add_job(download_sumulas, CronTrigger(hour="1", minute="15"))
-    scheduler.start()
     yield
-    scheduler.shutdown(wait=False)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -36,7 +31,7 @@ async def root():
     return RedirectResponse("/docs")
 
 @app.get("/sumula", response_model=Sumula)
-async def search(ano: Annotated[int, Query(example=2023)], jogo: Annotated[int, Query(example=10, title="Numero da partida")]):
+async def search(user: Annotated[AuthenticationModel, Depends(check_api_key)], ano: Annotated[int, Query(example=2023)], jogo: Annotated[int, Query(example=10, title="Numero da partida")]):
     result = await read(ano, jogo)
     if not result:
         try:
