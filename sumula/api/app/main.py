@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan, docs_url="/documentation", root_path="/sumula", openapi_url="/openapi.json")
 
 
-@app.get("/", include_in_schema=False)
+@app.get("/sumula", include_in_schema=False)
 async def root():
     return RedirectResponse("/documentation")
 
@@ -51,7 +51,7 @@ async def copa_brasil(
     return result
 
 
-@app.get("campeaonato/{ano}/{jogo}", response_model=Sumula)
+@app.get("campeonato/{ano}/{jogo}", response_model=Sumula)
 async def campeonato_brasileiro(
     user: Annotated[AuthenticationModel, Depends(check_api_key)],
     ano: Annotated[int, Path(example=2023)],
