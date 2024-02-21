@@ -25,7 +25,7 @@ def limpar_dados_partida(texto: str):
     mandante, visitante = jogo.split(" X ")
     ano = data.split("/")[-1]
     return {
-        "campeonato": campeonato.split("-")[0].strip(),
+        "competicao": campeonato.split("-")[0].strip(),
         "rodada": rodada,
         "jogo": jogo,
         "data": data,

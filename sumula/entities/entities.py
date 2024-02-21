@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class Jogo(BaseModel):
-    campeonato: str
+    competicao: str
     rodada: int | str
     jogo: str
     data: str
