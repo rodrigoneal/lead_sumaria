@@ -19,5 +19,5 @@ async def read(year: int, jogo: int, campeonato: str):
     return await Sumula.find_one(
         Sumula.primeira_pagina.jogo.ano == year,
         Sumula.primeira_pagina.jogo.jogo_num == jogo,
-        Sumula.primeira_pagina.jogo.campeonato == campeonato,
+        Sumula.primeira_pagina.jogo.competicao == campeonato,
     )
