@@ -51,7 +51,7 @@ async def copa_brasil(
     return result
 
 
-@app.get("campeonato/{ano}/{jogo}", response_model=Sumula)
+@app.get("/campeonato/{ano}/{jogo}", response_model=Sumula)
 async def campeonato_brasileiro(
     user: Annotated[AuthenticationModel, Depends(check_api_key)],
     ano: Annotated[int, Path(example=2023)],
