@@ -85,6 +85,7 @@ def primeira_pagina():
                                 1 / 3
     """
 
+
 @pytest.fixture
 def segunda_pagina():
     return """

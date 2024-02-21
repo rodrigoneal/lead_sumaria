@@ -25,9 +25,8 @@ def test_se_limpa_dados_comissao_tecnica(segunda_pagina):
         "Massagista: Cleber Willian Fernandes",
     ]
 
-
     dados_comissao = limpar_comissao_tecnica(comissao, "Ceará / CE", "Juventude / RS")
-    assert len(dados_comissao["Ceará / CE"]) == 6 
+    assert len(dados_comissao["Ceará / CE"]) == 6
     assert len(dados_comissao["Juventude / RS"]) == 6
 
 

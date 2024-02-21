@@ -25,6 +25,14 @@ python-dotenv = "^1.0.1"
 aiomysql = "^0.2.0"
 
 
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+ruff = "^0.2.2"
+
+
+[tool.poetry.group.ruff.dependencies]
+isort = "^5.13.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

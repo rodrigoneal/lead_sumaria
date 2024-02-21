@@ -1,49 +1,49 @@
 from os import PathLike
 from pathlib import Path
-import PyPDF2
 
-from sumula.extract_text.extract_text import (
-    dados_acrescimos,
-    dados_cartao_amarelo,
-    dados_cartao_vermelho,
-    dados_comissao_tecnica,
-    dados_cronologogia,
-    dados_jogo_numero,
-    dados_observacoes_eventuais,
-    dados_ocorrencias,
-    dados_partida,
-    dados_arbitragem,
-    dados_relatorio_assistente,
-    dados_substituicao_2,
-    extrair_relacao_jogadores,
-    dados_gols,
-)
+import PyPDF2
 
 from sumula.entities.entities import (
     Acrescimo,
+    Arbitragem,
     Assistente,
     CartaoVermelho,
     CartoesAmarelo,
     Comissao,
     ComissaoTecnica,
+    Cronologia,
+    Cronologia1T,
+    Cronologia2T,
     CronologiaPenalti,
+    Equipe,
     EquipeComissao,
     Escalacao,
     Gols,
     Jogo,
-    Arbitragem,
-    Cronologia1T,
-    Cronologia2T,
     Observacoes,
     Ocorrencias,
-    RelacaoJogadores,
-    Equipe,
     PrimeiraPagina,
-    Cronologia,
+    RelacaoJogadores,
     SegundaPagina,
     Substituicoes,
     Sumula,
     TerceiraPagina,
+)
+from sumula.extract_text.extract_text import (
+    dados_acrescimos,
+    dados_arbitragem,
+    dados_cartao_amarelo,
+    dados_cartao_vermelho,
+    dados_comissao_tecnica,
+    dados_cronologogia,
+    dados_gols,
+    dados_jogo_numero,
+    dados_observacoes_eventuais,
+    dados_ocorrencias,
+    dados_partida,
+    dados_relatorio_assistente,
+    dados_substituicao_2,
+    extrair_relacao_jogadores,
 )
 from sumula.logger import logger
 
@@ -73,6 +73,7 @@ class PDFHandler:
         jogo_num = dados_jogo_numero(text)
         arbitragem = dados_arbitragem(text)
         cronologia = dados_cronologogia(text)
+
         if len(arbitragem) <= 5:
             template = "template_sem_var.json"
         elif len(arbitragem) >= 12:
@@ -251,9 +252,7 @@ class PDFHandler:
             segunda_pagina = self.segunda_pagina(
                 self.get_pages("\nCartões Amarelos", "Ocorrências / Observações")
             )
-            terceira_pagina = self.terceira_pagina(
-                self.get_pages("Ocorrências", None)
-            )
+            terceira_pagina = self.terceira_pagina(self.get_pages("Ocorrências", None))
         else:
             segunda_pagina = self.segunda_pagina(self.read_pdf.pages[1].extract_text())
             terceira_pagina = self.terceira_pagina(

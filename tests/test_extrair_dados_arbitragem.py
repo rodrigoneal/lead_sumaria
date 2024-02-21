@@ -1,4 +1,7 @@
-from sumula.extract_text.extract_text import extrair_dados_arbitragem, limpar_dados_arbitragem
+from sumula.extract_text.extract_text import (
+    extrair_dados_arbitragem,
+    limpar_dados_arbitragem,
+)
 
 
 def test_se_extrai_dados_arbitragem(primeira_pagina: str):

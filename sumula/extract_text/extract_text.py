@@ -1,14 +1,13 @@
 import re
+
 import tabula
 
 from sumula.extract_text.clear_text import remover_texto
 from sumula.logger import logger
 
 
-
-
 def dados_jogo_numero(texto: str):
-    logger.info("Extraindo dados do jogo")    
+    logger.info("Extraindo dados do jogo")
     return re.search(r"Jogo:([\s\S]*?)CBF - ", texto).group(1).strip()
 
 
@@ -26,7 +25,7 @@ def limpar_dados_partida(texto: str):
     mandante, visitante = jogo.split(" X ")
     ano = data.split("/")[-1]
     return {
-        "campeonato": campeonato,
+        "campeonato": campeonato.split("-")[0].strip(),
         "rodada": rodada,
         "jogo": jogo,
         "data": data,
@@ -101,12 +100,10 @@ def limpar_dados_cronologia(texto: str):
             coluna_direita = dados[0].split(":", 1)
             coluna_esquerda = dados[1].split(":", 1)
             temp = {
-                coluna_direita[0]
-                .strip(): coluna_direita[1]
+                coluna_direita[0].strip(): coluna_direita[1]
                 .strip()
                 .replace("2º Tempo", ""),
-                coluna_esquerda[0]
-                .strip(): coluna_esquerda[1]
+                coluna_esquerda[0].strip(): coluna_esquerda[1]
                 .strip()
                 .replace("2º Tempo", ""),
             }
@@ -120,6 +117,7 @@ def limpar_dados_cronologia(texto: str):
 
 
 # [{'Entrada do mandante': '18:50', 'Atraso': 'Não Houve'}, {'Entrada do visitante': '18:50', 'Atraso': 'Não Houve'}, {'Início 1º Tempo': '19:00', 'Atraso': 'Não Houve'}, {'Término do 1º Tempo': '19:48', 'Acréscimo': '3 min'}, {'Entrada do mandante': '20:01', 'Atraso': 'Não Houve'}, {'Entrada do visitante': '20:01', 'Atraso': 'Não Houve'}, {'Início do 2º Tempo': '20:03', 'Atraso': 'Não Houve'}, {'Término do 2º Tempo': '20:56', 'Acréscimo': '8 min'}, {'Resultado do 1º Tempo': '1 X 2', 'Resultado Final': '3 X 2'}]
+
 
 def dados_cronologogia(texto: str) -> list[dict[str, str]]:
     logger.info("Extraindo dados da cronologia")
@@ -304,8 +302,10 @@ def extrair_dados_cartao_vermelhos(text: str):
     if correspondencia:
         return correspondencia.group(1).replace("\nTempo 1T/2TNºNome do Jogador\n", "")
     elif "Cartões Vermelhos" in text and text.endswith("."):
-        texto = text[text.find("Cartões Vermelhos"):].replace("Cartões Vermelhos", "")
-        return texto.replace("\nTempo 1T/2TNºNome do Jogador\n", "").replace("\nTempo1T/2TNºNome do Jogador\n", "")
+        texto = text[text.find("Cartões Vermelhos") :].replace("Cartões Vermelhos", "")
+        return texto.replace("\nTempo 1T/2TNºNome do Jogador\n", "").replace(
+            "\nTempo1T/2TNºNome do Jogador\n", ""
+        )
     logger.critical("Erro ao extrair dados de cartão vermelho")
     raise ValueError
 
@@ -385,7 +385,6 @@ def dados_cartao_vermelho(texto: str):
 
 
 def extrair_dados_ocorrencias(texto: str):
-
     regex = re.compile(
         r"Ocorrências / Observações([\s\S]*?)Motivo de atraso no início e/ou"
     )
@@ -512,7 +511,7 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
         try:
             tempo, dados = texto.split(equipe)
         except ValueError:
-            tempo, dados = texto.split(equipe.rsplit(" ",1)[0])
+            tempo, dados = texto.split(equipe.rsplit(" ", 1)[0])
             dados = dados.replace("...", "").strip()
         num_entrou, dados, nome_saiu = dados.split("-")
         num_result = re.search(padrao_numero, dados)
@@ -533,4 +532,3 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
             }
         )
     return substituicoes
-

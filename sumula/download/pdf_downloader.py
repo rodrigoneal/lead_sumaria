@@ -2,10 +2,10 @@ import asyncio
 from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import Literal
+
 import httpx
 
 from sumula.logger import logger
-
 
 
 async def proximas_partidas(ano: str) -> httpx.Response:
@@ -16,7 +16,6 @@ async def proximas_partidas(ano: str) -> httpx.Response:
 
 async def requisicao(url) -> httpx.Response:
     async with httpx.AsyncClient() as client:
-        
         for _ in range(10):
             try:
                 logger.info(f"Requisitando: {url}")
@@ -29,7 +28,9 @@ async def requisicao(url) -> httpx.Response:
                 await asyncio.sleep(1)
                 continue
             except httpx.HTTPStatusError as e:
-                logger.info(f"Erro de requisição: {url} status: {e.response.status_code}")
+                logger.info(
+                    f"Erro de requisição: {url} status: {e.response.status_code}"
+                )
                 raise e
         return response
 

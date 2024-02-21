@@ -1,9 +1,9 @@
-from sumula.entities.entities import Sumula as SumulaEntities
 from tinydb import Query
+
+from sumula.entities.entities import Sumula as SumulaEntities
 
 
 class SumulaRepository:
-
     def __init__(self, db):
         self.db = db
 

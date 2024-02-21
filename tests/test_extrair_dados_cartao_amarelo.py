@@ -1,4 +1,7 @@
-from sumula.extract_text.extract_text import extrair_dados_cartao_amarelos, limpar_dados_cartao_amarelos
+from sumula.extract_text.extract_text import (
+    extrair_dados_cartao_amarelos,
+    limpar_dados_cartao_amarelos,
+)
 
 
 def test_se_extrai_dados_cartao_amarelo(segunda_pagina):

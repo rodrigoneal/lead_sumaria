@@ -9,7 +9,9 @@ class AuthRepository:
         self.session = session
 
     async def check_api_key(self, api_key: str):
-        stmt = select(AuthenticationModel).where(AuthenticationModel.chave_api_2 == api_key)
+        stmt = select(AuthenticationModel).where(
+            AuthenticationModel.chave_api_2 == api_key
+        )
         async with self.session() as session:
             result = await session.execute(stmt)
             return result.scalars().first()

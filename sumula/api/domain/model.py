@@ -1,6 +1,16 @@
 from datetime import datetime
+
+from sqlalchemy import (
+    JSON,
+    TIMESTAMP,
+    BigInteger,
+    Boolean,
+    Column,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import JSON, TIMESTAMP, BigInteger, Boolean, Column, Integer, String, UniqueConstraint
 
 
 class Base(DeclarativeBase):
@@ -13,8 +23,9 @@ class Base(DeclarativeBase):
 
     pass
 
+
 class AuthenticationModel(Base):
-    __tablename__ = 'adm_clients'
+    __tablename__ = "adm_clients"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     id_account = Column(Integer, nullable=False)
@@ -35,4 +46,3 @@ class AuthenticationModel(Base):
     created_by = Column(String(255))
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
-    
