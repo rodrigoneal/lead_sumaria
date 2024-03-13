@@ -2,6 +2,7 @@ import asyncio
 from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import Literal
+from fastapi import HTTPException
 
 import httpx
 
@@ -31,7 +32,9 @@ async def requisicao(url) -> httpx.Response:
                 logger.info(
                     f"Erro de requisição: {url} status: {e.response.status_code}"
                 )
-                raise e
+                raise HTTPException(
+                    status_code=e.response.status_code, detail="O Jogo não existe ou ainda não está disponível a sumula da partida."
+                )
         return response
 
 

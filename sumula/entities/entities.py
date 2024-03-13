@@ -174,7 +174,6 @@ class Sumula(BaseModel):
     segunda_pagina: SegundaPagina
     terceira_pagina: TerceiraPagina
     url_pdf: str
-
     def to_database(self):
         database = self.primeira_pagina.model_dump()
         database.update(self.segunda_pagina.model_dump())
@@ -182,3 +181,30 @@ class Sumula(BaseModel):
         database.update(self.primeira_pagina.model_dump()["jogo"])
         database["url_pdf"] = self.url_pdf
         return database
+
+class SumulaResponse(BaseModel):
+    competicao: str
+    rodada: int | str
+    jogo: str
+    data: str
+    horario: str
+    estadio: str
+    mandante: str
+    visitante: str
+    ano: int
+    jogo_num: int
+    arbitragem: list[Arbitragem]
+    cronologia: Cronologia
+    escalacao: Escalacao
+    gols: list[Gols]
+    cartoes_amarelo: list[CartoesAmarelo]
+    cartoes_vermelho: list[CartaoVermelho]
+    comissao: Comissao
+    ocorrencias: Ocorrencias
+    acrescimos: Acrescimo
+    observacao: Observacoes
+    assistente: Assistente
+    substituicao: list[Substituicoes]
+    url_pdf: str
+
+
