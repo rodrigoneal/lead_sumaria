@@ -1,48 +1,69 @@
 from datetime import datetime
 
-from sqlalchemy import (
-    JSON,
-    TIMESTAMP,
-    BigInteger,
-    Boolean,
-    Column,
-    Integer,
-    String,
-    UniqueConstraint,
-)
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import JSON, func
+from sqlalchemy.orm import Mapped, mapped_column, registry
 
 
-class Base(DeclarativeBase):
-    """
-    Classe base para criar tabelas.
-
-    Args:
-        DeclarativeBase (DeclarativeBase): Classe base do SQLAlchemy
-    """
-
-    pass
+reg = registry()
 
 
-class AuthenticationModel(Base):
+@reg.mapped_as_dataclass
+class AuthenticationModel:
     __tablename__ = "adm_clients"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    id_account = Column(Integer, nullable=False)
-    codigo_cliente = Column(String(255))
-    razao_social = Column(String(255))
-    nick_name = Column(String(255))
-    cnpj = Column(String(255))
-    tipo_empresa = Column(String(255))
-    uf = Column(String(255))
-    chave_api_1 = Column(String(255))
-    chave_api_2 = Column(String(255))
-    chave_api_3 = Column(String(255))
-    codigo_generico_1 = Column(String(255))
-    codigo_generico_2 = Column(String(255))
-    modules = Column(JSON)
-    subModules = Column(JSON)
-    status = Column(Boolean)
-    created_by = Column(String(255))
-    created_at = Column(TIMESTAMP)
-    updated_at = Column(TIMESTAMP)
+    id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
+    id_account: Mapped[int] = mapped_column(nullable=False)
+    codigo_cliente: Mapped[int] = mapped_column(nullable=False)
+    razao_social: Mapped[str] = mapped_column()
+    nick_name: Mapped[str] = mapped_column()
+    cnpj: Mapped[str] = mapped_column()
+    tipo_empresa: Mapped[str] = mapped_column()
+    uf: Mapped[str] = mapped_column()
+    chave_api_1: Mapped[str] = mapped_column()
+    chave_api_2: Mapped[str] = mapped_column()
+    chave_api_3: Mapped[str] = mapped_column()
+    codigo_generico_1: Mapped[str] = mapped_column()
+    codigo_generico_2: Mapped[str] = mapped_column()
+    modules: Mapped[dict | list] = mapped_column(JSON)
+    subModules: Mapped[dict | list] = mapped_column(JSON)
+    status: Mapped[bool] = mapped_column(nullable=False)
+    created_by: Mapped[str] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(init=False)
+    updated_at: Mapped[datetime] = mapped_column(init=False)
+
+
+@reg.mapped_as_dataclass
+class SumulaModel:
+    __tablename__ = "sumula"
+
+    id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
+    competicao: Mapped[str] = mapped_column()
+    rodada: Mapped[int] = mapped_column()
+    data: Mapped[str] = mapped_column()
+    horario: Mapped[str] = mapped_column()
+    estadio: Mapped[str] = mapped_column()
+    mandante: Mapped[str] = mapped_column()
+    visitante: Mapped[str] = mapped_column()
+    ano: Mapped[int] = mapped_column()
+    jogo_num: Mapped[int] = mapped_column()
+    jogo: Mapped[dict] = mapped_column(JSON)
+    arbitragem: Mapped[dict | list] = mapped_column(JSON)
+    cronologia: Mapped[dict | list] = mapped_column(JSON)
+    escalacao: Mapped[dict | list] = mapped_column(JSON)
+    gols: Mapped[dict | list] = mapped_column(
+        JSON, nullable=True
+    )
+    cartoes_amarelo: Mapped[dict | list] = mapped_column(JSON)
+    cartoes_vermelho: Mapped[dict | list] = mapped_column(JSON)
+    comissao: Mapped[dict | list] = mapped_column(JSON)
+    ocorrencias: Mapped[dict | list] = mapped_column(JSON)
+    acrescimos: Mapped[dict | list] = mapped_column(JSON)
+    observacao: Mapped[dict | list] = mapped_column(JSON)
+    assistente: Mapped[dict | list] = mapped_column(JSON)
+    substituicao: Mapped[dict | list] = mapped_column(JSON)
+    url_pdf: Mapped[str] = mapped_column()
+   
+
+
+    created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(init=False, onupdate=func.now(), nullable=True)

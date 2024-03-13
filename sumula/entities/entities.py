@@ -1,4 +1,3 @@
-from beanie import Document
 from pydantic import BaseModel
 
 
@@ -170,14 +169,16 @@ class TerceiraPagina(BaseModel):
     substituicao: list[Substituicoes]
 
 
-class Sumula(Document):
+class Sumula(BaseModel):
     primeira_pagina: PrimeiraPagina
     segunda_pagina: SegundaPagina
     terceira_pagina: TerceiraPagina
     url_pdf: str
 
     def to_database(self):
-        return {
-            "ano": self.primeira_pagina.jogo.ano,
-            "jogo": self.primeira_pagina.jogo.jogo_num,
-        }
+        database = self.primeira_pagina.model_dump()
+        database.update(self.segunda_pagina.model_dump())
+        database.update(self.terceira_pagina.model_dump())
+        database.update(self.primeira_pagina.model_dump()["jogo"])
+        database["url_pdf"] = self.url_pdf
+        return database
