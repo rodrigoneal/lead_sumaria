@@ -66,3 +66,18 @@ class SumulaModel:
     updated_at: Mapped[datetime] = mapped_column(
         init=False, onupdate=func.now(), nullable=True
     )
+
+@reg.mapped_as_dataclass
+class Logs:
+    __tablename__ = "logs"
+
+    id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
+    id_client: Mapped[int] = mapped_column()
+    dh_chamada: Mapped[datetime] = mapped_column()
+    dh_retorno: Mapped[datetime] = mapped_column()
+    url_chamada: Mapped[str] = mapped_column()
+    st_sucesso: Mapped[bool] = mapped_column()
+    dados_retorno: Mapped[dict] = mapped_column(JSON)
+    cd_ocorrencia: Mapped[int] = mapped_column()
+    ds_erro: Mapped[str] = mapped_column()
+    
