@@ -29,7 +29,7 @@ O segundo path é o ano exemplo: `2023`.
 
 O terceiro path é o numero do jogo exemplo: `10`.
 
-Atravez da query `competicao` pode-se escolher entre `copa do brasil` e `campeonato brasileiro`. 
+Na query `competicao` pode-se escolher entre `copa do brasil` e `campeonato brasileiro`. 
 
 Por exemplo: `https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa do brasil`
 
