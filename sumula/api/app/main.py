@@ -19,21 +19,21 @@ async def lifespan(app: FastAPI):
 
 
 description = """
-Converte a Sumula da Campeonato Brasileiro e Copa do Brasil para Json. 🚀
+# Conversão da Súmula do Campeonato Brasileiro e da Copa do Brasil para JSON 🚀
 
-Para autenticacão é necessario passar o Token no cabecalho da requisição. Por exemplo: `X-API-Key: 1234`
+Para autenticação, é necessário passar o Token no cabeçalho da requisição. Por exemplo: `X-API-Key: 1234`.
 
-a URL base é <https://www.leadtax-api.lead.tax/sumula/>
+A URL base é [https://www.leadtax-api.lead.tax/sumula/](https://www.leadtax-api.lead.tax/sumula/).
 
-O segundo path é o ano exemplo: `2023`.
+O segundo path é o ano, por exemplo: `2023`.
 
-O terceiro path é o numero do jogo exemplo: `10`.
+O terceiro path é o número do jogo, por exemplo: `10`.
 
-Na query `competicao` pode-se escolher entre `copa do brasil` e `campeonato brasileiro`. 
+Na query `competicao`, pode-se escolher entre `copa do brasil` e `campeonato brasileiro`.
 
-Por exemplo: `https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa do brasil`
+Por exemplo: [https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa%20do%20brasil](https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa%20do%20brasil).
 
-```
+```python
 import requests
 
 headers = {
@@ -41,12 +41,7 @@ headers = {
     'X-API-Key': '1234',
 }
 
-response = requests.get('https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa do brasil', headers=headers)
-
-```
-O response vai retornar um json com os dados da sumula, que pode ser vista no swagger na parte de schemas com o nome `Sumula`.
-
-Para verificar o swagger, acesse [Swagger](https://www.leadtax-api.lead.tax/sumula/docs "Documentação da API") ou o [Redoc](https://www.leadtax-api.lead.tax/sumula/redoc "Redoc")
+response = requests.get('https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa%20do%20brasil', headers=headers)
 
 """
 
