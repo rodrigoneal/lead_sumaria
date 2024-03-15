@@ -70,7 +70,7 @@ app.add_middleware(CustomHeaderMiddleware)
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse("/sumula/documentation")
+    return RedirectResponse("/sumula/docs")
 
 
 add_routers(app)
