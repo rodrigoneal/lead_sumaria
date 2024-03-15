@@ -36,7 +36,7 @@ class AuthenticationModel:
 
 @reg.mapped_as_dataclass
 class SumulaModel:
-    __tablename__ = "sumula"
+    __tablename__ = "api_sumula"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
     competicao: Mapped[str] = mapped_column()
@@ -67,9 +67,10 @@ class SumulaModel:
         init=False, onupdate=func.now(), nullable=True
     )
 
+
 @reg.mapped_as_dataclass
 class Logs:
-    __tablename__ = "logs"
+    __tablename__ = "api_logs"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
     id_client: Mapped[int] = mapped_column()
@@ -80,4 +81,3 @@ class Logs:
     dados_retorno: Mapped[dict] = mapped_column(JSON)
     cd_ocorrencia: Mapped[int] = mapped_column()
     ds_erro: Mapped[str] = mapped_column()
-    
