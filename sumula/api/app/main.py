@@ -46,7 +46,7 @@ response = requests.get('https://www.leadtax-api.lead.tax/sumula/2023/10?competi
 ```
 O response vai retornar um json com os dados da sumula, que pode ser vista no swagger na parte de schemas com o nome `Sumula`.
 
-Para verificar o swagger, acesse [Swagger](https://www.leadtax-api.lead.tax/sumula/documentation "Documentação da API") ou o [Redoc](https://www.leadtax-api.lead.tax/sumula/redoc "Redoc")
+Para verificar o swagger, acesse [Swagger](https://www.leadtax-api.lead.tax/sumula/docs "Documentação da API") ou o [Redoc](https://www.leadtax-api.lead.tax/sumula/redoc "Redoc")
 
 """
 
