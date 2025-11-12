@@ -6,7 +6,6 @@ from fastapi.responses import RedirectResponse
 
 
 from sumula.api.app.routers import add_routers
-from sumula.api.app.routers.middleware_logs import CustomHeaderMiddleware
 from sumula.api.config import db
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -21,27 +20,20 @@ async def lifespan(app: FastAPI):
 description = """
 # Conversão da Súmula do Campeonato Brasileiro e da Copa do Brasil para JSON 🚀
 
-Para autenticação, é necessário passar o Token no cabeçalho da requisição. Por exemplo: `X-API-Key: 1234`.
-
-A URL base é [https://www.leadtax-api.lead.tax/sumula/](https://www.leadtax-api.lead.tax/sumula/).
-
 O segundo path é o ano, por exemplo: `2023`.
 
 O terceiro path é o número do jogo, por exemplo: `10`.
 
 Na query `competicao`, pode-se escolher entre `copa do brasil` e `campeonato brasileiro`.
 
-Por exemplo: [https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa%20do%20brasil](https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa%20do%20brasil).
-
 ```python
 import requests
 
 headers = {
     'accept': 'application/json',
-    'X-API-Key': '1234',
 }
 
-response = requests.get('https://www.leadtax-api.lead.tax/sumula/2023/10?competicao=copa%20do%20brasil', headers=headers)
+response = requests.get('https://127.0.0.1/sumula/2023/10?competicao=copa%20do%20brasil', headers=headers)
 
 """
 
@@ -54,13 +46,11 @@ app = FastAPI(
     root_path="/sumula",
     openapi_url="/openapi.json",
     contact={
-        "name": "Edilson Barros",
-        "url": "https://www.portal.lead.tax/",
-        "email": "ediilson.barros@leadtax.com.br",
+        "name": "Rodrigo Castro",
+        "email": "rodrigho2006@gmail.com",
     },
     description=description,
 )
-app.add_middleware(CustomHeaderMiddleware)
 
 
 @app.get("/", include_in_schema=False)

@@ -18,7 +18,7 @@ sumula_routers = APIRouter(tags=["Sumula"])
 
 @sumula_routers.get("/{ano}/{jogo}", response_model=SumulaResponse)
 async def sumula_to_pdf(
-    user: Annotated[AuthenticationModel, Depends(check_api_key)],
+    # user: Annotated[AuthenticationModel, Depends(check_api_key)],
     ano: Annotated[int, Path(example=2023, title="Ano da partida")],
     jogo: Annotated[int, Path(example=10, title="Numero da partida")],
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -29,7 +29,5 @@ async def sumula_to_pdf(
         competicao.value, ano, jogo
     ):
         return result
-    result = await download_sumula_jogo(ano, jogo, competicao.name.lower())
-    sumula = SumulaModel(**result.to_database())
-    result = await sumula_repository.insert_sumula(sumula)
-    return result
+    result = await download_sumula_jogo(ano, jogo, competicao.name.lower())    
+    return SumulaResponse(**result.to_database())

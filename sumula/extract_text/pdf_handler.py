@@ -15,6 +15,7 @@ from sumula.entities.entities import (
     Cronologia1T,
     Cronologia2T,
     CronologiaPenalti,
+    DadosTime,
     Equipe,
     EquipeComissao,
     Escalacao,
@@ -83,7 +84,13 @@ class PDFHandler:
         path = Path("sumula/assets/templates") / template
         template = str(path.resolve())
         jogadores = extrair_relacao_jogadores(self.pdf, template)
-        _jogo = Jogo(**partida, jogo_num=jogo_num)
+        _mandante_nome, _mandante_uf = partida["mandante"].split(" / ")
+        mandante = DadosTime(nome=_mandante_nome, uf=_mandante_uf)
+        _visitante_nome, _visitante_uf = partida["visitante"].split(" / ")
+        visitante = DadosTime(nome=_visitante_nome, uf=_visitante_uf)
+        del partida["mandante"]
+        del partida["visitante"]
+        _jogo = Jogo(**partida, mandante=mandante, visitante=visitante, jogo_num=jogo_num)
         _arbitragem = [Arbitragem(**arbitro) for arbitro in arbitragem]
         try:
             resultado = cronologia[-1]["Resultado do 1º Tempo"]

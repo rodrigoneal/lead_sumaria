@@ -1,5 +1,3 @@
-from beanie.odm.operators.find.comparison import In
-
 from sumula.entities.entities import Sumula
 from sumula.logger import logger
 

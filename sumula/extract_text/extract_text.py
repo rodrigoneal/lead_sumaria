@@ -127,6 +127,7 @@ def dados_cronologogia(texto: str) -> list[dict[str, str]]:
 
 def extrair_relacao_jogadores(pdf, template):
     tables = tabula.read_pdf_with_template(pdf, template)
+    
     df = tables[-1]
     try:
         if df.iloc[-1, 0].startswith("T = "):
@@ -134,10 +135,12 @@ def extrair_relacao_jogadores(pdf, template):
     except AttributeError:
         pass
     colunas = df.iloc[1, 0:6]
+    
     try:
         nome_time_casa, nome_time_visitante = df.iloc[0, :].dropna()
-    except ValueError:
-        return
+    except ValueError as e:
+        nome_time_casa, nome_time_visitante = [c for c in df.columns if not c.startswith("Unnamed")]
+    
     escalacao_casa = df.iloc[2:, 0:6].dropna(how="all")
     escalacao_casa.columns = colunas
     mandante = {
@@ -482,15 +485,26 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
     except AttributeError:
         return "Nada a relatar."
     padrao = r"\d+:\d+|\+\d+:\d+|-PJ"
-    padrao_horario = r"(\d+:\d{0,2}|\+\d+:\d{0,2}|-PJ)"
+    # padrao_horario = r"(\d+:\d{0,2}|\+\d+:\d{0,2}|-PJ)"
+    padrao_evento = r"(?:\d{1,2}:\d{2}|-+\s*INT)"
     padrao_numero = r"\d+"
-    horarios = re.findall(padrao_horario, texto)
+    horarios = re.findall(padrao_evento, texto)
     textos = re.split(padrao, texto)
     substituicoes = []
     if "Tempo 1T/2T" in textos[0]:
         textos = textos[1:]
     _mandante = mandante.replace(" / ", "/").strip()
     _visitante = visitante.replace(" / ", "/").strip()
+    texto_substituicoes =[]
+    for texto in textos:
+        dividido = texto.split("\n-")
+        if len(dividido) > 1:
+            texto_substituicoes.extend(dividido)
+        else:
+            texto_substituicoes.append(texto)
+    textos = [texto.replace("\n", "").replace("...", "").strip() for texto in texto_substituicoes]
+
+        
     for contador, texto in enumerate(textos):
         texto = texto.strip()
         if _mandante in texto:
@@ -507,13 +521,15 @@ def dados_substituicao_2(text: str, mandante: str, visitante: str):
         try:
             hora = horarios[contador]
         except IndexError:
+            breakpoint()
             hora = horarios[contador - 1]
         try:
             tempo, dados = texto.split(equipe)
         except ValueError:
             tempo, dados = texto.split(equipe.rsplit(" ", 1)[0])
             dados = dados.replace("...", "").strip()
-        num_entrou, dados, nome_saiu = dados.split("-")
+        num_entrou, dados, nome_saiu = dados.splitlines()[0].split("-")
+
         num_result = re.search(padrao_numero, dados)
         if num_result:
             num_saiu = num_result.group()
